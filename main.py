@@ -1,14 +1,7 @@
-import bpy#, sys #,os
+import bpy
 import numpy as np
-# sys.path.append("C:/Users/omine/Documents/programs/sourceTxts")
 from . import utils
-
-#for reload modified script
-# from importlib import reload
-# reload(hairClass)
-# myscript.main()
 from .hairClass import *
-
 from bpy.props import (
     # IntProperty,
     FloatProperty,
@@ -16,10 +9,6 @@ from bpy.props import (
     # EnumProperty,
     # BoolProperty,
 )
-
-
-# bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(0, 0), "mouse_event":(0, 0), "pressure":0, "size":0, "pen_flip":False, "x_tilt":0, "y_tilt":0, "time":0, "is_start":False}])
-#bpy.ops.particle.particle_edit_toggle()
 
 class AUTOHAIR_OT_New(bpy.types.Operator):
 
@@ -46,20 +35,17 @@ class AUTOHAIR_OT_Unlink(bpy.types.Operator):
 
         return {'FINISHED'}
 
-# class AUTOHAIR_OT_SetRadius(bpy.types.Operator):
+class AUTOHAIR_OT_Translate(bpy.types.Operator):
 
-#     bl_idname = "autohair.set_radius"
-#     bl_label = "Radius"
-#     bl_description = "Set Children's Radius"
-#     bl_options = {'REGISTER', 'UNDO'}
+    bl_idname = "autohair.translate"
+    bl_label = "Update Position"
+    bl_description = "Update positions of target hair"
+    bl_options = {'REGISTER', 'UNDO'}
 
-#     radius: FloatProperty(default = 1.0, options = {"HIDDEN"})
+    def execute(self, context):
+        bpy.context.scene.hsysCtrl.updatePos()
 
-#     def execute(self, context):
-#         # global hsys
-#         bpy.types.Scene.hsys.setRadius(self.radius)
-
-#         return {'FINISHED'}
+        return {'FINISHED'}
 
 class AUTOHAIR_PT_Menu(bpy.types.Panel):
     bl_label = "AutoHair"         # パネルのヘッダに表示される文字列
@@ -90,7 +76,5 @@ class AUTOHAIR_PT_Menu(bpy.types.Panel):
         layout.operator(AUTOHAIR_OT_New.bl_idname)
         layout.operator(AUTOHAIR_OT_Unlink.bl_idname)
         layout.separator()
+        layout.operator(AUTOHAIR_OT_Translate.bl_idname)
         layout.prop(scene, "autoHairRadius")
-
-        # opProp = layout.operator(AUTOHAIR_OT_SetRadius.bl_idname)
-        # opProp.radius = context.scene.autoHairRadius

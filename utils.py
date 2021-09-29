@@ -1,5 +1,9 @@
 import numpy as np
 import mathutils
+import bpy
+
+def particleEditNotify():
+    bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(0, 0), "mouse_event":(0, 0), "pressure":0, "size":0, "pen_flip":False, "x_tilt":0, "y_tilt":0, "time":0, "is_start":False}])
 
 def sub_norm_v3_v3v3(key1, key2):
     rawVec = key1 - key2

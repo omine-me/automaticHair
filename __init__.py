@@ -60,7 +60,7 @@ def delProps():
 classes = [
     main.AUTOHAIR_OT_New,
     main.AUTOHAIR_OT_Unlink,
-    # main.AUTOHAIR_OT_SetRadius,
+    main.AUTOHAIR_OT_Translate,
     main.AUTOHAIR_PT_Menu
 ]
 

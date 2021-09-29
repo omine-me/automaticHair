@@ -1,54 +1,84 @@
-import bpy#, sys
+import bpy
 import numpy as np
-# sys.path.append("C:/Users/omine/Documents/programs/sourceTxts")
 from . import utils
 
-class ParKey:
-    def __init__(self):
+class Key:
+    def __init__(self, co):
+        self.co = co
         self.radius = 1.0
         self.rot = [1., 0, 0, 0]
+        # self.random
+        # self.braid
+        # self.amp
+        # self.freq
 
-class Child:
-    def __init__(self, parent, child, psys):
-        self.par = parent
-        self.num = child
-        self.rootDiff = psys.particles[child].hair_keys[0].co - psys.particles[parent].hair_keys[0].co
+class TarHair:
+    def __init__(self, ctrlHairNum, tarHairNum, psys):
+        self.num = tarHairNum
+        self.rootDiff = psys.particles[tarHairNum].hair_keys[0].co - psys.particles[ctrlHairNum].hair_keys[0].co
 
-class Parent:
-    def __init__(self, parAndChilds, psys):
+class CtrlHair:
+    def __init__(self, index, parAndChilds, psys, tarHairKeyPos):
         self.flat = 0.
-        self.num = parAndChilds[0]
-        self.childNum = parAndChilds[1:]
-        self.childs = []
+        # self.endpoint
+        # self.shape
+        # self.まとまりのrandomness
+        self.ctrlNum = index
+        # self.childNum = parAndChilds[1:]
+        self.tarHair = []
         self.keys = []
         for i in range(psys.settings.hair_step+1):
-            self.keys.append(ParKey())
-        for i in range(len(parAndChilds)-1):
-            self.childs.append(Child(parAndChilds[0], parAndChilds[i+1], psys))
+            self.keys.append(Key(tarHairKeyPos[i,:]))
+        for i in range(len(parAndChilds)):
+            self.tarHair.append(TarHair(parAndChilds[0], parAndChilds[i], psys))
 
 class HairCtrlSystem:
     def __init__(self, parent=None, obj=None):
         if parent is not None:
             self.tarObj = obj
             self.parentNum = parent
-            self.parents = []
+            self.ctrlHair = []
             C = bpy.context
+            pLen = len(parent)
 
-            parChildCorr = np.full((len(parent), 10), -1) #10 is tmp, so diferrent num is fine
+            parChildCorr = np.full((pLen, 10), -1) #10 is tmp, so diferrent num is fine
             parChildCorr[:,0] = parent #array's first column is for parent
 
             C.tool_settings.particle_edit.display_step = 7
             C.tool_settings.particle_edit.use_preserve_length = False
 
-            bpy.ops.object.particle_system_add()
+            # bpy.ops.object.particle_system_add() #ほんとはloadする
             psys = C.active_object.particle_systems.active
             psys.name = "AutoHairTarget"
             psys.settings.name = "AutoHairTargetParticleSettings"
             psys.settings.type = "HAIR"
-            psys.settings.count = 100
-            psys.settings.hair_step = 9#49
+            # psys.settings.count = 100
+            # psys.settings.hair_step = 9#49
             psys.settings.display_step = 5
             targetName = C.active_object.name
+
+            # get parent's pos
+            bpy.types.Scene.hsysTar = HairTarSystem(C.active_object, psys.name)
+            tarParPos = np.empty((pLen, C.scene.hsysTar.psys.settings.hair_step+1, 3))
+            C.scene.hsysTar._setDepsgpaph()
+            for i in range(pLen):
+                for j in range(C.scene.hsysTar.psys.settings.hair_step+1):
+                    tarParPos[i,j,:] = C.scene.hsysTar.psys.particles[parent[i]].hair_keys[j].co
+            
+            # get child hair of each parent hair
+            for i in range(C.scene.hsysTar.psys.settings.count):
+                if not (i in parent):
+                    parNumIdx = C.scene.hsysTar._getClosestParNum(i, parent)
+                    if parChildCorr[parNumIdx, -1] != -1:
+                        parChildCorr = np.append(parChildCorr, np.full([pLen,1],-1), axis=1)
+
+                    parChildCorr[parNumIdx, parChildCorr[parNumIdx,:].argmin()] = i
+            
+            for i in range(pLen):
+                self.ctrlHair.append(CtrlHair(i, parChildCorr[i, :], C.scene.hsysTar.psys, tarParPos[i, :, :]))
+
+            bpy.ops.particle.particle_edit_toggle()
+
             #active is changed to duplicated obj
             bpy.ops.object.duplicate_move()
             C.active_object.name = targetName + "(AutoHairControl)"
@@ -56,31 +86,21 @@ class HairCtrlSystem:
             bpy.ops.transform.translate(value=(-3,0,0))
             bpy.ops.object.particle_system_remove()
             bpy.ops.object.particle_system_add()
-            psys = C.active_object.particle_systems.active
-            psys.name = "AutoHairControl"
-            self.psysName = psys.name
-            psys.settings.name = "AutoHairControlParticleSettings"
-            psys.settings.type = "HAIR"
-            psys.settings.count = 1
-            psys.settings.hair_step = 9
+            self.psys = C.active_object.particle_systems.active
+            self.psys.name = self.psysName = "AutoHairControl"
+            self.psys.settings.name = "AutoHairControlParticleSettings"
+            self.psys.settings.type = "HAIR"
+            self.psys.settings.count = pLen
+            self.psys.settings.hair_step = 9
+            self.psys.settings.display_step = 5
 
-            bpy.types.Scene.hsysTar = HairTarSystem(C.active_object.name, psys.name)
-
-
-            for i in range(C.scene.hsysTar.psys.settings.count):
-                if not (i in parent):
-                    parNumIdx = self._getClosestParNum(i)
-                    if parChildCorr[parNumIdx, -1] != -1:
-                        parChildCorr = np.append(parChildCorr, np.full([len(parent),1],-1), axis=1)
-
-                    parChildCorr[parNumIdx, parChildCorr[parNumIdx,:].argmin()] = i
-            
             self._setDepsgpaph()
-            for i in range(len(parent)):
-                self.parents.append(Parent(parChildCorr[i, :], self.psys))
+            for i in range(self.psys.settings.count):
+                for j in range(self.psys.settings.hair_step+1):
+                    self.psys.particles[i].hair_keys[j].co = tarParPos[i,j,:]
+            utils.particleEditNotify()
+            # bpy.ops.particle.particle_edit_toggle()
 
-            
-    
     def _setDepsgpaph(self):
         if bpy.context.object.mode == "PARTICLE_EDIT":
             bpy.ops.particle.particle_edit_toggle()
@@ -91,28 +111,14 @@ class HairCtrlSystem:
         eobj = self.ctrlObj.evaluated_get(bpy.context.evaluated_depsgraph_get())
         self.psys = eobj.particle_systems[self.psysName]
 
-    def _getClosestParNum(self, child):
-        childPos = bpy.context.scene.hsysTar.psys.particles[child].hair_keys[0].co
-        
-        minDistance = 99999
-        shortestParIdx = -1
-        for i in range(len(self.parentNum)):
-            parPos = bpy.context.scene.hsysTar.psys.particles[self.parentNum[i]].hair_keys[0].co
-            distance = abs(childPos[0] - parPos[0]) + abs(childPos[1] - parPos[1]) + abs(childPos[2] - parPos[2])
-            
-            if distance < minDistance:
-                minDistance = distance
-                shortestParIdx = i
-        
-        return shortestParIdx
     
     def setArrayedChild(self):
-        for p in self.parents:
+        for p in self.ctrlHair:
             prevTan = np.array([0., 0., 0.])
             for s in range(self.psys.settings.hair_step+1):
                 prevTan = self._setKeyRotation(p, s, prevTan)
             p.keys[-1].rot = p.keys[-2].rot #set last keys
-            self._offsetChild(p)
+            bpy.context.scene.hsysTar._offsetChild(p)
     
     def getSelected(self):
         bpy.ops.particle.selected()
@@ -128,10 +134,10 @@ class HairCtrlSystem:
             p.keys[0].rot = [1, 0, 0, 0]
             prevTan = np.array([0., 0., 0.])
         elif s == 1:
-            prevTan = utils.sub_norm_v3_v3v3(self.psys.particles[p.num].hair_keys[1].co, self.psys.particles[p.num].hair_keys[0].co)
+            prevTan = utils.sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[1].co, self.psys.particles[p.ctrlNum].hair_keys[0].co)
             p.keys[1].rot = [1, 0, 0, 0]
         else:
-            tan = utils.sub_norm_v3_v3v3(self.psys.particles[p.num].hair_keys[s].co, self.psys.particles[p.num].hair_keys[s-1].co)
+            tan = utils.sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[s].co, self.psys.particles[p.ctrlNum].hair_keys[s-1].co)
             cosangle = np.dot(tan, prevTan)
 
             if (cosangle > 0.999999):
@@ -144,31 +150,27 @@ class HairCtrlSystem:
             
             prevTan = tan
         return prevTan
-
-    def _offsetChild(self, p):
-        print(p)
-        bpy.context.scene.hsysTar._setDepsgpaph()
-        for c in p.childs:
-            # print(p.keys[1].radius)
-            for s in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
-                # print("\n")
-                # print(c.rootDiff, p.keys[s].radius)
-                co = utils.mul_v3_v3s1(c.rootDiff, p.keys[s].radius)
-                # print(co)
-                co[2] *= p.flat
-                co = utils.mul_v3_qtv3(p.keys[s].rot, co)
-                # print(co)
-                bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[s].co = self.psys.particles[p.num].hair_keys[s].co + co
+    
+    def _setKeyPos(self):
+        self._setDepsgpaph()
+        for i in range(self.psys.settings.count):
+            for j in range(self.psys.settings.hair_step+1):
+                self.ctrlHair[i].keys[j].co = self.psys.particles[i].hair_keys[j].co
+    
+    def updatePos(self):
+        self._setKeyPos()
+        self.setArrayedChild()
 
 class HairTarSystem:
-    def __init__(self, objName, psysName):
-        self.obj = bpy.data.objects[objName]
+    def __init__(self, obj, psysName):
+        self.obj = obj
         self.psysName = psysName
-        bpy.context.object.particle_systems.active_index = bpy.context.object.particle_systems.find(psysName)
-        if bpy.context.object.mode != "PARTICLE_EDIT":
-            bpy.ops.particle.particle_edit_toggle()
-        eobj = bpy.context.active_object.evaluated_get(bpy.context.evaluated_depsgraph_get())
-        self.psys = eobj.particle_systems[psysName]
+        self.psys = obj.particle_systems.active
+        # bpy.context.object.particle_systems.active_index = bpy.context.object.particle_systems.find(psysName)
+        # if bpy.context.object.mode != "PARTICLE_EDIT":
+        #     bpy.ops.particle.particle_edit_toggle()
+        # eobj = bpy.context.active_object.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        # self.psys = eobj.particle_systems[psysName]
     
     def _setDepsgpaph(self):
         if bpy.context.object.mode == "PARTICLE_EDIT":
@@ -179,3 +181,34 @@ class HairTarSystem:
             bpy.ops.particle.particle_edit_toggle()
         eobj = self.obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
         self.psys = eobj.particle_systems[self.psysName]
+
+    def _getClosestParNum(self, child, parents):
+        childPos = bpy.context.scene.hsysTar.psys.particles[child].hair_keys[0].co
+        
+        minDistance = 99999
+        shortestParIdx = -1
+        for i in range(len(parents)):
+            parPos = bpy.context.scene.hsysTar.psys.particles[parents[i]].hair_keys[0].co
+            distance = abs(childPos[0] - parPos[0]) + abs(childPos[1] - parPos[1]) + abs(childPos[2] - parPos[2])
+            
+            if distance < minDistance:
+                minDistance = distance
+                shortestParIdx = i
+        
+        return shortestParIdx
+
+    def _offsetChild(self, p):
+        # print(p)
+        bpy.context.scene.hsysTar._setDepsgpaph()
+        for c in p.tarHair:
+            # print(p.keys[1].radius)
+            for s in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
+                # print("\n")
+                # print(c.rootDiff, p.keys[s].radius)
+                co = utils.mul_v3_v3s1(c.rootDiff, p.keys[s].radius)
+                # print(co)
+                co[2] *= p.flat
+                co = utils.mul_v3_qtv3(p.keys[s].rot, co)
+                # print(p.keys[s].co)
+                # print(co)
+                bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[s].co = p.keys[s].co + co

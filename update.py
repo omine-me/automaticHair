@@ -1,4 +1,5 @@
 import bpy
+from . import utils
 
 def setRadius(self, context):
     hsys = bpy.context.scene.hsysCtrl
@@ -10,8 +11,8 @@ def setRadius(self, context):
         for c in k:
             # print(pNum, c)
             hsys.parents[0].keys[c].radius = context.scene.autoHairRadius
-        bpy.context.scene.hsysTar._setDepsgpaph()
-        hsys._offsetChild(hsys.parents[0])
+        bpy.context.scene.hsysTar._offsetChild(hsys.parents[0])
+        utils.particleEditNotify()
         hsys._setDepsgpaph()
 
 # def update(self, context):
