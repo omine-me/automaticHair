@@ -3,7 +3,10 @@ import mathutils
 import bpy
 
 def particleEditNotify():
-    bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(0, 0), "mouse_event":(0, 0), "pressure":0, "size":0, "pen_flip":False, "x_tilt":0, "y_tilt":0, "time":0, "is_start":False}])
+    try:
+        bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(0, 0), "mouse_event":(0, 0), "pressure":0, "size":0, "pen_flip":False, "x_tilt":0, "y_tilt":0, "time":0, "is_start":False}])
+    except RuntimeError:
+        pass
 
 def sub_norm_v3_v3v3(key1, key2):
     rawVec = key1 - key2
@@ -13,7 +16,6 @@ def mul_v3_v3s1(a, b):#s1 means scalar
     return mathutils.Vector((a[0] * b, a[1] * b, a[2] * b))
 
 def mul_qt_qtqt(a, b):
-    t0 = t1 = t2 = 0.0
     q = np.zeros(4)
 
     t0 = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3]
@@ -49,3 +51,11 @@ def axis_angle_to_quat(norm, angle):
     co = np.cos(phi)
     # return 1
     return [co, norm[0]*si, norm[1]*si, norm[2]*si]
+
+def dot_fl_v3v3(a,b):
+    d = np.dot(a,b)
+    if d < -1:
+        d = -1
+    elif d > 1:
+        d = 1
+    return d
