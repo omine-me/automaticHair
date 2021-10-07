@@ -1,10 +1,11 @@
 import bpy
 import numpy as np
 from . import utils
+import mathutils
 
 class Key:
     def __init__(self, co):
-        self.co = co
+        self.co = mathutils.Vector(co)
         self.radius = .1
         self.rot = [1., 0, 0, 0]
         self.random = 0.
@@ -172,7 +173,7 @@ class HairCtrlSystem:
             # self._setDepsgpaph()
             for j in range(self.psys.settings.hair_step+1):
                 # self._setDepsgpaph()
-                self.ctrlHair[i].keys[j].co = self.psys.particles[i].hair_keys[j].co
+                self.ctrlHair[i].keys[j].co = mathutils.Vector(self.psys.particles[i].hair_keys[j].co)
                 # print(self.ctrlHair[i].keys[j].co,self.psys.particles[i].hair_keys[j].co)
     
     def updatePos(self):
@@ -221,7 +222,7 @@ class HairTarSystem:
         # print(p)
         bpy.context.scene.hsysTar._setDepsgpaph()
         for c in p.tarHair:
-            print(p.keys[1].radius, p.keys[1].co)
+            # print(p.keys[1].radius, p.keys[1].co)
             for s in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
                 # print("\n")
                 # print(c.rootDiff, p.keys[s].radius)
@@ -240,6 +241,6 @@ class HairTarSystem:
                 # print(co)
                 if (p.keys[s].random != 0.):
                     co = (co[0] + (np.random.rand()*2-1)*p.keys[s].random, co[1] + (np.random.rand()*2-1)*p.keys[s].random, co[2] + (np.random.rand()*2-1)*p.keys[s].random)
-                bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[s].co = p.keys[s].co + co
-                # print(p.keys[s].co)
+                print(p.keys[s].co, co)
+                bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[s].co = p.keys[s].co + mathutils.Vector(co)
         # utils.particleEditNotify()

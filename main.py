@@ -67,8 +67,8 @@ class AUTOHAIR_OT_Translate(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        bpy.context.scene.hsysCtrl.updatePos()
-
+        context.scene.hsysCtrl.updatePos()
+        # print(context.scene.hsysCtrl.ctrlHair[0].keys[1].co)
         return {'FINISHED'}
 
 class AUTOHAIRPanel:
@@ -93,7 +93,7 @@ class AUTOHAIR_PT_Menu(AUTOHAIRPanel, bpy.types.Panel):
 
 class AUTOHAIR_PT_Menu2(AUTOHAIRPanel, bpy.types.Panel):
     bl_parent_id = "AUTOHAIR_PT_Menu"
-    bl_label = "Particle Properties"
+    bl_label = "Hair Properties"
 
     def draw(self, context):
         layout = self.layout
