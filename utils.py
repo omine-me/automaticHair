@@ -8,6 +8,9 @@ def particleEditNotify():
     except RuntimeError:
         pass
 
+def sub_v3_v3v3(a, b):
+    return a - b
+
 def sub_norm_v3_v3v3(key1, key2):
     rawVec = key1 - key2
     return rawVec / np.linalg.norm(rawVec)
@@ -45,6 +48,9 @@ def mul_v3_qtv3(q, r):
 def norm_v3_v3(v):
     return v / np.linalg.norm(v)
 
+def norm_s1_v3(v):
+    return np.sqrt(np.dot(v,v))
+
 def axis_angle_to_quat(norm, angle):
     phi = 0.5 * angle
     si = np.sin(phi)
@@ -59,3 +65,13 @@ def dot_fl_v3v3(a,b):
     elif d > 1:
         d = 1
     return d
+
+def add_v3_v3v3(a,b):
+    return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+
+def interp_v3_v3v3(a, b, t):
+    s = 1. - t
+    return [s * a[0] + t * b[0], s * a[1] + t * b[1], s * a[2] + t * b[2]]
+
+def clamp(num, mi, ma):
+   return max(min(num, ma), mi)

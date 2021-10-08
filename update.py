@@ -62,3 +62,29 @@ def setRoundness(self, context):
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
         utils.particleEditNotify()
         hsys._setDepsgpaph()
+
+def setAmp(self, context):
+    hsys = context.scene.hsysCtrl
+    hsys._setDepsgpaph()
+    selected = hsys.getSelected()
+    hsys._setDepsgpaph()
+    for p, k in selected.items():
+        pNum = int(p[1:])
+        for c in k:
+            hsys.ctrlHair[pNum].keys[c].amp = context.scene.autoHairAmp
+        context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
+        utils.particleEditNotify()
+        hsys._setDepsgpaph()
+
+def setFreq(self, context):
+    hsys = context.scene.hsysCtrl
+    hsys._setDepsgpaph()
+    selected = hsys.getSelected()
+    hsys._setDepsgpaph()
+    for p, k in selected.items():
+        pNum = int(p[1:])
+        for c in k:
+            hsys.ctrlHair[pNum].keys[c].freq = context.scene.autoHairFreq
+        context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
+        utils.particleEditNotify()
+        hsys._setDepsgpaph()

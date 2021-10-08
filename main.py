@@ -18,7 +18,7 @@ class AUTOHAIR_OT_New(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        bpy.types.Scene.hsysCtrl = HairCtrlSystem([0], bpy.context.active_object)
+        bpy.types.Scene.hsysCtrl = HairCtrlSystem([0,5], bpy.context.active_object)
         bpy.context.scene.hsysCtrl.setArrayedChild()
 
         return {'FINISHED'}

@@ -83,16 +83,16 @@ def initProps():
     scene.autoHairAmp = FloatProperty(
         name="Amplitude",
         description="Children's Amplitude",
-        default=1.0,
+        default=.2,
         min=0.0,
-        update=update.setRandom
+        update=update.setAmp
     )
     scene.autoHairFreq = FloatProperty(
         name="Frequency",
         description="Children's Frequency",
-        default=1.0,
+        default=5.,
         min=0.0,
-        update=update.setRandom
+        update=update.setFreq
     )
 
 def delProps():

@@ -1,6 +1,6 @@
 import bpy
 import numpy as np
-from . import utils
+from .utils import *
 import mathutils
 
 class Key:
@@ -9,9 +9,9 @@ class Key:
         self.radius = .1
         self.rot = [1., 0, 0, 0]
         self.random = 0.
-        # self.braid
-        # self.amp
-        # self.freq
+        self.braid = 0.
+        self.amp = .2
+        self.freq = 5.
 
 class TarHair:
     def __init__(self, ctrlHairNum, tarHairNum, psys):
@@ -76,7 +76,7 @@ class HairCtrlSystem:
             
             for i in range(pLen):
                 self.ctrlHair.append(CtrlHair(i, parChildCorr[i, :], C.scene.hsysTar.psys, tarParPos[i, :, :]))
-            utils.particleEditNotify()
+            particleEditNotify()
             bpy.ops.particle.particle_edit_toggle()
 
             #active is changed to duplicated obj
@@ -98,7 +98,7 @@ class HairCtrlSystem:
             for i in range(self.psys.settings.count):
                 for j in range(self.psys.settings.hair_step+1):
                     self.psys.particles[i].hair_keys[j].co = tarParPos[i,j,:]
-            utils.particleEditNotify()
+            particleEditNotify()
             # bpy.ops.particle.particle_edit_toggle()
 
     def _setDepsgpaph(self):
@@ -123,6 +123,7 @@ class HairCtrlSystem:
                 prevTan = self._setKeyRotation(p, s, prevTan)
             p.keys[-1].rot = p.keys[-2].rot #set last keys
             bpy.context.scene.hsysTar._offsetChild(p)
+            particleEditNotify()
         # self._setDepsgpaph()
     
     def getSelected(self):
@@ -140,29 +141,29 @@ class HairCtrlSystem:
             # prevTan = np.array([0., 0., 0.])
             pass
         elif s == 1:
-            prevTan = utils.sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[1].co, self.psys.particles[p.ctrlNum].hair_keys[0].co)
+            prevTan = sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[1].co, self.psys.particles[p.ctrlNum].hair_keys[0].co)
             p.keys[0].rot = [1, 0, 0, 0]
         else:
-            tan = utils.sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[s].co, self.psys.particles[p.ctrlNum].hair_keys[s-1].co)
-            # tan = utils.sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[s-1].co, self.psys.particles[p.ctrlNum].hair_keys[s].co)
+            tan = sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[s].co, self.psys.particles[p.ctrlNum].hair_keys[s-1].co)
+            # tan = sub_norm_v3_v3v3(self.psys.particles[p.ctrlNum].hair_keys[s-1].co, self.psys.particles[p.ctrlNum].hair_keys[s].co)
             # print(self.psys.particles[p.ctrlNum].hair_keys[s].co, self.psys.particles[p.ctrlNum].hair_keys[s-1].co)
-            cosangle = utils.dot_fl_v3v3(tan, prevTan)
+            cosangle = dot_fl_v3v3(tan, prevTan)
             # print(cosangle)
             if (cosangle > 0.999999): #tan and prevTan are opposite
                 p.keys[s-1].rot = p.keys[s-2].rot
             else:
                 angle = np.arccos(cosangle)
                 # print(angle)
-                norm = utils.norm_v3_v3(np.cross(prevTan, tan))
-                # norm = utils.norm_v3_v3(np.cross(tan, prevTan))
-                # norm = utils.norm_v3_v3(tan)
+                norm = norm_v3_v3(np.cross(prevTan, tan))
+                # norm = norm_v3_v3(np.cross(tan, prevTan))
+                # norm = norm_v3_v3(tan)
                 # print(norm)
-                q = utils.axis_angle_to_quat(norm, angle) #when angle is 1 or -1, q = [1,0,0,0]
-                # q = utils.axis_angle_to_quat(norm, .5) #when angle is 1 or -1, q = [1,0,0,0]
+                q = axis_angle_to_quat(norm, angle) #when angle is 1 or -1, q = [1,0,0,0]
+                # q = axis_angle_to_quat(norm, .5) #when angle is 1 or -1, q = [1,0,0,0]
                 # print(q)
-                p.keys[s-1].rot = utils.mul_qt_qtqt(q, p.keys[s-2].rot)
+                p.keys[s-1].rot = mul_qt_qtqt(q, p.keys[s-2].rot)
                 # p.keys[s-1].rot = q
-                # print(utils.mul_qt_qtqt(q, p.keys[s-2].rot))
+                # print(mul_qt_qtqt(q, p.keys[s-2].rot))
             
             prevTan = tan
         return prevTan
@@ -223,24 +224,72 @@ class HairTarSystem:
         bpy.context.scene.hsysTar._setDepsgpaph()
         for c in p.tarHair:
             # print(p.keys[1].radius, p.keys[1].co)
-            for s in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
-                # print("\n")
-                # print(c.rootDiff, p.keys[s].radius)
-                co = utils.mul_v3_v3s1(c.rootDiff, p.keys[s].radius)
-                # print(co)
+            for k in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
+                co = mul_v3_v3s1(c.rootDiff, p.keys[k].radius)
                 co[2] = p.roundness * (np.random.rand()*2-1)
-                ####
-                # if(s<5):
-                #     rott = [1.,0,0,0]
-                # else:
-                #     rott = [0.7071, 0, -0.7071, 0]
-                # co = utils.mul_v3_qtv3(rott, co)
-                ####
-                co = utils.mul_v3_qtv3(p.keys[s].rot, co)
-                # print(p.keys[s].co)
-                # print(co)
-                if (p.keys[s].random != 0.):
-                    co = (co[0] + (np.random.rand()*2-1)*p.keys[s].random, co[1] + (np.random.rand()*2-1)*p.keys[s].random, co[2] + (np.random.rand()*2-1)*p.keys[s].random)
-                print(p.keys[s].co, co)
-                bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[s].co = p.keys[s].co + mathutils.Vector(co)
-        # utils.particleEditNotify()
+                co = mul_v3_qtv3(p.keys[k].rot, co)
+                co = self._doKink(p, co, k/bpy.context.scene.hsysTar.psys.settings.hair_step+1,k)
+                if (p.keys[k].random != 0.):
+                    co = (co[0] + (np.random.rand()*2-1)*p.keys[k].random, co[1] + (np.random.rand()*2-1)*p.keys[k].random, co[2] + (np.random.rand()*2-1)*p.keys[k].random)
+                # print(p.keys[s].co, co)
+                bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[k].co = p.keys[k].co + mathutils.Vector(co)
+    
+    def _doKink(self, p, co, time, k):
+        # kink = [1., 0., 0.]
+        # q1 = [1., 0., 0., 0.]
+        t = time * p.keys[k].freq * np.pi
+
+        #when emit from face
+        dt = np.abs(t)
+        dt = clamp(dt, 0., np.pi)
+        dt = np.sin(dt/2.)
+
+        result = co
+        parVec = sub_v3_v3v3(p.keys[k].co, co)
+
+        # PART_KINK_BRAID
+        yVec = mul_v3_qtv3(p.keys[k].rot, [0., 1., 0.])
+        # zVec = mul_v3_qtv3(p.keys[k].rot, [0., 0., 1.])
+        zVec = mul_v3_qtv3(p.keys[k].rot, [1., 0., 0.])
+
+        parVec = -parVec
+        vecOne = norm_v3_v3(parVec)
+
+        inpY = dot_fl_v3v3(yVec, vecOne)
+        inpZ = dot_fl_v3v3(zVec, vecOne)
+
+        if(inpY > .5):
+            state_co = yVec
+            yVec = mul_v3_v3s1(yVec, p.keys[k].amp * np.cos(t))
+            zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * np.sin(2. * t))
+        elif(inpZ > 0.):
+            state_co = mul_v3_v3s1(zVec, np.sin(np.pi / 3.0))
+            state_co += mul_v3_v3s1(yVec, -.5)
+            yVec = mul_v3_v3s1(yVec, -p.keys[k].amp*np.cos(t + np.pi /3.))
+            zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * np.cos(2. * t + np.pi / 6.))
+        else:
+            state_co = mul_v3_v3s1(zVec, -np.sin(np.pi/3.))
+            state_co += mul_v3_v3s1(yVec, -.5)
+
+            yVec = mul_v3_v3s1(yVec, p.keys[k].amp * -np.sin(t + np.pi / 6.))
+            zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * -np.sin(2. * t + np.pi / 3.))
+        
+        state_co = mul_v3_v3s1(state_co, p.keys[k].amp)
+        state_co = add_v3_v3v3(state_co, p.keys[k].co)
+        parVec = sub_v3_v3v3(co, mathutils.Vector(state_co))
+
+        length = norm_s1_v3(parVec)
+        parVec = mul_v3_v3s1(parVec, min(length, p.keys[k].amp / 2.))
+
+        state_co = add_v3_v3v3(p.keys[k].co, yVec)
+        state_co = add_v3_v3v3(state_co, zVec)
+        state_co = add_v3_v3v3(state_co, parVec)
+
+        # END OF PART_KINK_BRAID
+
+        # if (dt < 1.):
+        #     co = interp_v3_v3v3(co, result, dt)
+        # else:
+        #     co = result
+        # return co
+        return state_co
