@@ -1,6 +1,11 @@
 import numpy as np
-import mathutils
-import bpy
+import mathutils, bpy, os
+
+def importBaseObj():
+    bpy.ops.import_scene.obj(filepath=os.path.join(os.path.dirname(__file__), "head_model.obj"))
+    bpy.context.view_layer.objects.active = bpy.context.selected_objects[-1]
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+    return bpy.context.active_object
 
 def particleEditNotify():
     try:

@@ -19,12 +19,14 @@ if "bpy" in locals():
     imp.reload(utils)
     imp.reload(update)
     imp.reload(const)
+    imp.reload(io)
 else:
     from . import main
     from . import hairClass
     from . import utils
     from . import update
     from . import const
+    from . import io
 
 import bpy
 from bpy.props import (
@@ -45,12 +47,12 @@ def initProps():
     scene = bpy.types.Scene
     scene.hsysTar = None
     scene.hsysCtrl = hairClass.HairCtrlSystem()
-    scene.autoHairIsCtrl = BoolProperty(
-        name="Is Control Hair",
-        description="Is This Hair Control",
-        default=False,
-        update=update.setIsCtrl
-    )
+    # scene.autoHairIsCtrl = BoolProperty(
+    #     name="Is Control Hair",
+    #     description="Is This Hair Control",
+    #     default=False,
+    #     update=update.setIsCtrl
+    # )
     scene.autoHairRoundness = FloatProperty(
         name="Roundness",
         description="Children's roundness",
@@ -76,14 +78,14 @@ def initProps():
     scene.autoHairBraid = FloatProperty(
         name="Braidness",
         description="Children's braidness",
-        default=1.0,
+        default=0.0,
         min=0.0,
-        update=update.setRandom
+        update=update.setBraid
     )
     scene.autoHairAmp = FloatProperty(
         name="Amplitude",
         description="Children's Amplitude",
-        default=.2,
+        default=.05,
         min=0.0,
         update=update.setAmp
     )
@@ -97,7 +99,7 @@ def initProps():
 
 def delProps():
     scene = bpy.types.Scene
-    del scene.autoHairIsCtrl
+    # del scene.autoHairIsCtrl
     del scene.autoHairRadius
     del scene.autoHairRandom
     del scene.autoHairRoundness
@@ -113,6 +115,8 @@ classes = [
     main.AUTOHAIR_OT_Save,
     main.AUTOHAIR_OT_Unlink,
     main.AUTOHAIR_OT_Translate,
+    main.AUTOHAIR_OT_AddCtrlHair,
+    main.AUTOHAIR_OT_RemoveCtrlHair,
     main.AUTOHAIR_PT_Menu,
     main.AUTOHAIR_PT_Menu2,
     main.AUTOHAIR_PT_Menu3,

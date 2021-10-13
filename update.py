@@ -1,5 +1,5 @@
-import bpy
-from . import utils
+import bpy, mathutils
+from . import utils, hairClass
 
 def setRadius(self, context):
     hsys = context.scene.hsysCtrl
@@ -31,26 +31,6 @@ def setRandom(self, context):
         utils.particleEditNotify()
         hsys._setDepsgpaph()
 
-def setIsCtrl(self, context):
-    hsys = context.scene.hsysCtrl
-    hsys._setDepsgpaph()
-    selected = hsys.getSelected()
-    hsys._setDepsgpaph()
-    for p, k in selected.items():
-        pNum = int(p[1:])
-        hsys.ctrlHair[pNum].isCtrl = context.scene.autoHairIsCtrl
-        if context.scene.autoHairIsCtrl:
-            for i in range(hsys.psys.settings.hair_step+1):
-                # hsys.ctrlHair[pNum].keys[c].co = hsys.ctrlHair[pNum].keys[0].co + (0,0,.1*c)
-                hsys.psys.particles[pNum].hair_keys[i].co = hsys.ctrlHair[pNum].keys[0].co + (0,0,.5*i)
-        else:
-            for i in range(hsys.psys.settings.hair_step+1):
-                # hsys.ctrlHair[pNum].keys[c].co = hsys.ctrlHair[pNum].keys[0].co
-                hsys.psys.particles[pNum].hair_keys[i].co = hsys.ctrlHair[pNum].keys[0].co
-        # context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
-        # utils.particleEditNotify()
-        hsys._setDepsgpaph()
-
 def setRoundness(self, context):
     hsys = context.scene.hsysCtrl
     hsys._setDepsgpaph()
@@ -59,6 +39,19 @@ def setRoundness(self, context):
     for p, k in selected.items():
         pNum = int(p[1:])
         hsys.ctrlHair[pNum].roundness = context.scene.autoHairRoundness
+        context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
+        utils.particleEditNotify()
+        hsys._setDepsgpaph()
+
+def setBraid(self, context):
+    hsys = context.scene.hsysCtrl
+    hsys._setDepsgpaph()
+    selected = hsys.getSelected()
+    hsys._setDepsgpaph()
+    for p, k in selected.items():
+        pNum = int(p[1:])
+        for c in k:
+            hsys.ctrlHair[pNum].keys[c].braid = context.scene.autoHairBraid
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
         utils.particleEditNotify()
         hsys._setDepsgpaph()
@@ -88,3 +81,27 @@ def setFreq(self, context):
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
         utils.particleEditNotify()
         hsys._setDepsgpaph()
+
+def setCtrlHair(context, isAddition):
+    hsys = context.scene.hsysCtrl
+    hsys._setDepsgpaph()
+    selected = hsys.getSelected()
+    hsys._setDepsgpaph()
+    for p, k in selected.items():
+        pNum = int(p[1:])
+        hsys.ctrlHair[pNum].isCtrl = isAddition
+        if isAddition:
+            if not hsys.ctrlHair[pNum].keys:
+                for i in range(hsys.psys.settings.hair_step+1):
+                    hsys.ctrlHair[pNum].keys.append(hairClass.Key(hsys.psys.particles[pNum].hair_keys[0].co + mathutils.Vector((0,0,.1*i))))
+            for i in range(hsys.psys.settings.hair_step+1):
+                hsys.psys.particles[pNum].hair_keys[i].co = hsys.ctrlHair[pNum].keys[i].co
+        else:
+            for i in range(hsys.psys.settings.hair_step+1):
+                hsys.psys.particles[pNum].hair_keys[i].co = hsys.psys.particles[pNum].hair_keys[0].co
+        utils.particleEditNotify()
+        # context.scene.hsysTar._offsetChild(hsys.ctrlHair[pNum])
+        # utils.particleEditNotify()
+        hsys.updateCtrlHair(hsys.ctrlHair[pNum])
+        hsys._setDepsgpaph()
+    hsys.setArrayedChild()
