@@ -10,6 +10,7 @@ def importBaseObj():
 def particleEditNotify():
     try:
         bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(0, 0), "mouse_event":(0, 0), "pressure":0, "size":0, "pen_flip":False, "x_tilt":0, "y_tilt":0, "time":0, "is_start":False}])
+        # bpy.ops.particle.brush_edit(stroke=[{"name":"", "pressure":0, "size":0}])
     except RuntimeError:
         pass
 

@@ -65,6 +65,7 @@ class HairCtrlSystem:
             bpy.types.Scene.hsysTar = HairTarSystem(C.active_object, psys.name)
             ### change to def
             tarParPos = np.empty((pLen, C.scene.hsysTar.psys.settings.hair_step+1, 3))
+            C.scene.hsysTar._particleEditMode()
             C.scene.hsysTar._setDepsgpaph()
             for i in range(C.scene.hsysTar.psys.settings.count):
                 for j in range(C.scene.hsysTar.psys.settings.hair_step+1):
@@ -102,9 +103,9 @@ class HairCtrlSystem:
 
             #active is changed to duplicated obj
             bpy.ops.object.duplicate_move()
-            C.active_object.name = targetName + "(AutoHairControl)"
+            C.active_object.name = targetName + "(AutoHairControler)"
             self.ctrlObj = C.active_object
-            bpy.ops.transform.translate(value=(-1,0,0))
+            bpy.ops.transform.translate(value=(-.4,0,0))
             bpy.ops.object.particle_system_remove()
             bpy.ops.object.particle_system_add()
             self.psys = C.active_object.particle_systems.active
@@ -116,9 +117,10 @@ class HairCtrlSystem:
             self.psys.settings.display_step = 5
             self.psys.settings.emit_from = "FACE"
             # self.psys.settings.hair_length = 0
-
-            self._setDepsgpaph()
             
+            self._particleEditMode()
+            self._setDepsgpaph()
+            C.tool_settings.particle_edit.use_preserve_root = True
             ### for i in range(hairCount):
             ###     for j in range(self.psys.settings.hair_step+1):
             ###         self.psys.particles[i].hair_keys[j].co = self.psys.particles[i].hair_keys[0].co
@@ -139,6 +141,7 @@ class HairCtrlSystem:
         # for th in p.tarHair:
         #     # get closest ctrl hair
         C = bpy.context
+        C.scene.hsysTar._particleEditMode()
         C.scene.hsysTar._setDepsgpaph()
         if p.isCtrl:
             self.parentNum.add(p.ctrlNum)
@@ -160,6 +163,10 @@ class HairCtrlSystem:
                                     p.tarHair.append(TarHair(parNum, i, C.scene.hsysTar.psys))
                                     # delete tarHair from current ctrlHair
                                     del(C.scene.hsysCtrl.ctrlHair[delCtIdx].tarHair[delTIdx])
+                                    break
+                            else:
+                                continue
+                            break
         else:
             self.parentNum.discard(p.ctrlNum)
             for t in p.tarHair:
@@ -172,20 +179,28 @@ class HairCtrlSystem:
                                     - C.scene.hsysTar.psys.particles[h.ctrlNum].hair_keys[0].co
             p.tarHair = []
 
-    def _setDepsgpaph(self):
+    def _particleEditMode(self):
         if bpy.context.object.mode == "PARTICLE_EDIT":
             bpy.ops.particle.particle_edit_toggle()
-        bpy.context.view_layer.objects.active = self.ctrlObj
-        bpy.context.object.particle_systems.active_index = bpy.context.object.particle_systems.find(self.psysName)
-        if bpy.context.object.mode != "PARTICLE_EDIT":
-            bpy.ops.particle.particle_edit_toggle()
-        eobj = self.ctrlObj.evaluated_get(bpy.context.evaluated_depsgraph_get())
-        self.psys = eobj.particle_systems[self.psysName]
+            bpy.context.view_layer.objects.active = self.ctrlObj
+            bpy.context.object.particle_systems.active_index = 0
+        # if bpy.context.object.mode != "PARTICLE_EDIT":
+        bpy.ops.particle.particle_edit_toggle()
+
+    def _setDepsgpaph(self):
+        # if bpy.context.object.mode == "PARTICLE_EDIT":
+        #     bpy.ops.particle.particle_edit_toggle()
+        #     bpy.context.view_layer.objects.active = self.ctrlObj
+        #     bpy.context.object.particle_systems.active_index = 0
+        #     # if bpy.context.object.mode != "PARTICLE_EDIT":
+        #     bpy.ops.particle.particle_edit_toggle()
+        self.psys = self.ctrlObj.evaluated_get(bpy.context.evaluated_depsgraph_get()).particle_systems[self.psysName]
 
     
     def setArrayedChild(self):
         for p in self.ctrlHair:
             if p.isCtrl:
+                self._particleEditMode()
                 self._setDepsgpaph()
                 prevTan = np.array([0., 0., 0.])
                 # print(p.ctrlNum)
@@ -196,7 +211,7 @@ class HairCtrlSystem:
                 p.keys[-1].rot = p.keys[-2].rot #set last keys
                 bpy.context.scene.hsysTar._offsetChild(p)
                 particleEditNotify()
-        self._setDepsgpaph()
+        self._particleEditMode()
     
     def getSelected(self):
         bpy.ops.particle.selected()
@@ -265,16 +280,23 @@ class HairTarSystem:
         # eobj = bpy.context.active_object.evaluated_get(bpy.context.evaluated_depsgraph_get())
         # self.psys = eobj.particle_systems[psysName]
     
-    def _setDepsgpaph(self):
+    def _particleEditMode(self):
         if bpy.context.object.mode == "PARTICLE_EDIT":
             bpy.ops.particle.particle_edit_toggle()
-        bpy.context.view_layer.objects.active = self.obj
-        bpy.context.object.particle_systems.active_index = bpy.context.object.particle_systems.find(self.psysName)
-        if bpy.context.object.mode != "PARTICLE_EDIT":
-            bpy.ops.particle.particle_edit_toggle()
-        eobj = self.obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
-        self.psys = eobj.particle_systems[self.psysName]
-        bpy.context.scene.tool_settings.particle_edit.use_preserve_length = False
+            bpy.context.view_layer.objects.active = self.obj
+            bpy.context.object.particle_systems.active_index = 0
+        # if bpy.context.object.mode != "PARTICLE_EDIT":
+        bpy.ops.particle.particle_edit_toggle()
+
+    def _setDepsgpaph(self):
+        # if bpy.context.object.mode == "PARTICLE_EDIT":
+        #     bpy.ops.particle.particle_edit_toggle()
+        #     bpy.context.view_layer.objects.active = self.obj
+        #     bpy.context.object.particle_systems.active_index = 0
+        #     # if bpy.context.object.mode != "PARTICLE_EDIT":
+        #     bpy.ops.particle.particle_edit_toggle()
+        self.psys = self.obj.evaluated_get(bpy.context.evaluated_depsgraph_get()).particle_systems[self.psysName]
+        # bpy.context.scene.tool_settings.particle_edit.use_preserve_length = False
 
     def _getClosestParNum(self, child, parents):
         childPos = bpy.context.scene.hsysTar.psys.particles[child].hair_keys[0].co
@@ -293,11 +315,9 @@ class HairTarSystem:
         return shortestParIdx, shortestPar
 
     def _offsetChild(self, p):
-        # print(p)
+        bpy.context.scene.hsysTar._particleEditMode()
         bpy.context.scene.hsysTar._setDepsgpaph()
         for c in p.tarHair:
-            # print(p.keys[1].radius, p.keys[1].co)
-            # if p.isCtrl:
             for k in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
                 co = mul_v3_v3s1(c.rootDiff, p.keys[k].radius)
                 co[2] = p.roundness * (np.random.rand()*2-1)
@@ -306,11 +326,7 @@ class HairTarSystem:
                     co = self._doKink(p, co, k/bpy.context.scene.hsysTar.psys.settings.hair_step+1,k)
                 if (p.keys[k].random != 0.):
                     co = (co[0] + (np.random.rand()*2-1)*p.keys[k].random, co[1] + (np.random.rand()*2-1)*p.keys[k].random, co[2] + (np.random.rand()*2-1)*p.keys[k].random)
-                # print(p.keys[s].co, co)
                 bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[k].co = p.keys[k].co + mathutils.Vector(co)
-            # else:
-            #     for k in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
-            #         bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[k].co = p.keys[0].co
     
     def _doKink(self, p, co, time, k):
         # kink = [1., 0., 0.]
@@ -327,8 +343,8 @@ class HairTarSystem:
 
         # PART_KINK_BRAID
         yVec = mul_v3_qtv3(p.keys[k].rot, [0., 1., 0.])
-        # zVec = mul_v3_qtv3(p.keys[k].rot, [0., 0., 1.])
-        zVec = mul_v3_qtv3(p.keys[k].rot, [1., 0., 0.])
+        zVec = mul_v3_qtv3(p.keys[k].rot, [0., 0., 1.])
+        # zVec = mul_v3_qtv3(p.keys[k].rot, [1., 0., 0.])
 
         parVec = -parVec
         vecOne = norm_v3_v3(parVec)

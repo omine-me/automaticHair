@@ -92,8 +92,8 @@ class AUTOHAIR_OT_Save(bpy.types.Operator):
 
     # changing default filename doesn't work...
     filename: StringProperty(
-        default="001.npz",
-        options={'HIDDEN'},
+        name="001.npz",
+        default="",
     )
     # 読み込みの拡張子を指定する
     # filter_glob を指定しておくと window_manager.fileselect_add が拡張子をフィルタする
@@ -154,44 +154,46 @@ class AUTOHAIR_PT_Menu(AUTOHAIRPanel, bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
-        scene = context.scene
 
         layout.label(text="Start from here:")
         layout.operator(AUTOHAIR_OT_New.bl_idname)
-        layout.operator(AUTOHAIR_OT_Unlink.bl_idname)
-        layout.separator()
         layout.operator(AUTOHAIR_OT_Load.bl_idname)
+        layout.separator()
         layout.operator(AUTOHAIR_OT_Save.bl_idname)
+        layout.operator(AUTOHAIR_OT_Unlink.bl_idname)
 
 class AUTOHAIR_PT_Menu2(AUTOHAIRPanel, bpy.types.Panel):
     bl_parent_id = "AUTOHAIR_PT_Menu"
     bl_label = "Hair Properties"
 
     def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        row = layout.row(align=True)
-        row.operator(AUTOHAIR_OT_AddCtrlHair.bl_idname)
-        row.operator(AUTOHAIR_OT_RemoveCtrlHair.bl_idname)
-        layout.prop(scene, "autoHairRoundness")
+        if bpy.context.mode == "PARTICLE":
+            layout = self.layout
+            scene = context.scene
+            row = layout.row(align=True)
+            row.operator(AUTOHAIR_OT_AddCtrlHair.bl_idname)
+            row.operator(AUTOHAIR_OT_RemoveCtrlHair.bl_idname)
+            layout.prop(scene, "autoHairRoundness")
 
 class AUTOHAIR_PT_Menu3(AUTOHAIRPanel, bpy.types.Panel):
     bl_parent_id = "AUTOHAIR_PT_Menu"
     bl_label = "Key Properties"
     def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        layout.operator(AUTOHAIR_OT_Translate.bl_idname)
-        layout.prop(scene, "autoHairRadius")
-        layout.prop(scene, "autoHairRandom")
-        layout.prop(scene, "autoHairBraid")
-        layout.prop(scene, "autoHairAmp")
-        layout.prop(scene, "autoHairFreq")
+        if bpy.context.mode == "PARTICLE":
+            layout = self.layout
+            scene = context.scene
+            layout.operator(AUTOHAIR_OT_Translate.bl_idname)
+            layout.prop(scene, "autoHairRadius")
+            layout.prop(scene, "autoHairRandom")
+            layout.prop(scene, "autoHairBraid")
+            layout.prop(scene, "autoHairAmp")
+            layout.prop(scene, "autoHairFreq")
 class AUTOHAIR_PT_Menu4(AUTOHAIRPanel, bpy.types.Panel):
     bl_parent_id = "AUTOHAIR_PT_Menu"
     bl_label = "Tools"
     def draw(self, context):
-        layout = self.layout
-        scene = context.scene
-        layout.prop(scene.tool_settings.particle_edit, "use_preserve_length")
-        layout.prop(scene.tool_settings.particle_edit, "use_preserve_root")
+        if bpy.context.mode == "PARTICLE":
+            layout = self.layout
+            scene = context.scene
+            layout.prop(scene.tool_settings.particle_edit, "use_preserve_length")
+            layout.prop(scene.tool_settings.particle_edit, "use_preserve_root")
