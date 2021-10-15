@@ -1,6 +1,6 @@
 import bpy, mathutils
 import numpy as np
-from . import utils
+from . import utils, const
 from .hairClass import *
 
 """
@@ -43,7 +43,7 @@ def load(path):
             parent.append(idx)
 
     bpy.types.Scene.hsysCtrl = HairCtrlSystem(parent, utils.importBaseObj())
-    for i in range(10000):
+    for i in range(const.DEFAULTHAIRNUM):
         c = bpy.types.Scene.hsysCtrl.ctrlHair[i]
         c.roundness = data[i,1]
         for idx, k in enumerate(c.keys[1:]):

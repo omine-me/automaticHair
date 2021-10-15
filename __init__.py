@@ -34,14 +34,8 @@ from bpy.props import (
     FloatProperty,
     # FloatVectorProperty,
     # EnumProperty,
-    BoolProperty,
+    # BoolProperty,
 )
-
-# メニューを構築する関数
-# def menu_fn(self, context):
-#     self.layout.separator()
-#     self.layout.operator(main.AUTOHAIR_OT_Load.bl_idname)
-#     self.layout.operator(main.AUTOHAIR_OT_Unlink.bl_idname)
 
 def initProps():
     scene = bpy.types.Scene
@@ -99,7 +93,6 @@ def initProps():
 
 def delProps():
     scene = bpy.types.Scene
-    # del scene.autoHairIsCtrl
     del scene.autoHairRadius
     del scene.autoHairRandom
     del scene.autoHairRoundness
