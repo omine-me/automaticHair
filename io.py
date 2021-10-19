@@ -1,4 +1,4 @@
-import bpy, mathutils
+import bpy, mathutils, struct
 import numpy as np
 from . import utils, const
 from .hairClass import *
@@ -63,3 +63,65 @@ def load(path):
             hsysCtrl.psys.particles[i].hair_keys[j+1].co = data[i,2+t:5+t]
     utils.particleEditNotify()
     hsysCtrl.setArrayedChild()
+
+def load_data_file(path):
+    def hex_to_float(s):
+        global struct
+        return struct.unpack('<f', s)[0]
+    ### step1 read valid strands number first ###
+    file = open(path, "rb")
+
+    current_num = 0 #location in data array
+    num_of_strand = 0
+
+    data = file.read()
+
+    #num_of_strand = int.from_bytes(data[0:4], "little") # == 10000
+    current_num += 4
+
+    parents = []
+    #get hair count
+    for i in range(10000):
+        num_of_vertices = int.from_bytes(data[current_num:current_num+4], "little")
+        current_num += 4
+        if num_of_vertices == 1:
+            current_num += 12
+            continue
+        # for j in range(num_of_vertices):
+        current_num += 12 * num_of_vertices
+        parents.append(i)
+        num_of_strand += 1
+
+    file.close()
+
+    bpy.types.Scene.hsysCtrl = HairCtrlSystem(parents, utils.importBaseObj(), isFromData=True)
+    hsysCtrl = bpy.context.scene.hsysCtrl
+    # hsysCtrl._particleEditMode()
+    hsysCtrl._setDepsgpaph()
+
+
+    current_num = 0 #reset location in data array
+    num_of_strand = 0
+    #num_of_strand = int.from_bytes(data[0:4], "little")
+    current_num += 4
+    
+    #set positions
+    psys = hsysCtrl.psys
+    for i in range(const.DEFAULTHAIRNUM):
+        c = bpy.types.Scene.hsysCtrl.ctrlHair[i]
+        num_of_vertices = int.from_bytes(data[current_num:current_num+4], "little")
+        current_num += 4
+        parti = psys.particles[i]
+        if num_of_vertices != 100:
+            current_num += 12
+            continue
+        # for k in c.keys[1:]:
+        for k in range(100):
+            # t = idx*8
+            parti.hair_keys[k].co = mathutils.Vector((hex_to_float(data[current_num:current_num+4]), -hex_to_float(data[current_num+8:current_num+12]), hex_to_float(data[current_num+4:current_num+8])))
+            # k.co = mathutils.Vector((hex_to_float(data[current_num:current_num+4]), -hex_to_float(data[current_num+8:current_num+12]), hex_to_float(data[current_num+4:current_num+8])))
+            current_num += 12
+    
+    utils.particleEditNotify()
+    # hsysCtrl.setArrayedChild()
+    hsysCtrl.updatePos()

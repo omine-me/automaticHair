@@ -105,6 +105,7 @@ def delProps():
 classes = [
     main.AUTOHAIR_OT_New,
     main.AUTOHAIR_OT_Load,
+    main.AUTOHAIR_OT_LoadDataFile,
     main.AUTOHAIR_OT_Save,
     main.AUTOHAIR_OT_Unlink,
     main.AUTOHAIR_OT_Translate,

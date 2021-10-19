@@ -62,6 +62,33 @@ class AUTOHAIR_OT_Load(bpy.types.Operator):
         io.load(self.filepath)
         return {'FINISHED'}
 
+class AUTOHAIR_OT_LoadDataFile(bpy.types.Operator):
+
+    bl_idname = "autohair.load_data_file"
+    bl_label = "Load .data File"
+    bl_description = "Load DATA File"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filepath: StringProperty(
+        name="File Path",
+        default="",
+        maxlen=1024,
+        subtype='FILE_PATH',
+        description="",
+    )
+    filter_glob: StringProperty(
+        default="*.data",
+        options={'HIDDEN'},
+    )
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        io.load_data_file(self.filepath)
+        return {'FINISHED'}
+
 class AUTOHAIR_OT_Save(bpy.types.Operator):
 
     bl_idname = "autohair.save"
@@ -156,8 +183,10 @@ class AUTOHAIR_PT_Menu(AUTOHAIRPanel, bpy.types.Panel):
         layout = self.layout
 
         layout.label(text="Start from here:")
+        layout.label(text="Root Pos is based on .data file")
         layout.operator(AUTOHAIR_OT_New.bl_idname)
         layout.operator(AUTOHAIR_OT_Load.bl_idname)
+        layout.operator(AUTOHAIR_OT_LoadDataFile.bl_idname)
         layout.separator()
         layout.operator(AUTOHAIR_OT_Save.bl_idname)
         layout.operator(AUTOHAIR_OT_Unlink.bl_idname)
