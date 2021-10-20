@@ -1,6 +1,6 @@
 import bpy
 import numpy as np
-from . import utils, update, io
+from . import utils, update, io, cpyutils
 from .hairClass import *
 from bpy.props import (
     # IntProperty,
@@ -32,7 +32,6 @@ class AUTOHAIR_OT_Unlink(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-
         return {'FINISHED'}
 
 class AUTOHAIR_OT_Load(bpy.types.Operator):

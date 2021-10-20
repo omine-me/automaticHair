@@ -4,6 +4,7 @@ from . import utils, hairClass
 def setRadius(self, context):
     hsys = context.scene.hsysCtrl
     # print(hsys.ctrlHair[0].keys[1].co)
+    hsys._particleEditMode()
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
@@ -20,6 +21,7 @@ def setRadius(self, context):
 
 def setRandom(self, context):
     hsys = context.scene.hsysCtrl
+    hsys._particleEditMode()
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
@@ -33,6 +35,7 @@ def setRandom(self, context):
 
 def setRoundness(self, context):
     hsys = context.scene.hsysCtrl
+    hsys._particleEditMode()
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
@@ -45,6 +48,7 @@ def setRoundness(self, context):
 
 def setBraid(self, context):
     hsys = context.scene.hsysCtrl
+    hsys._particleEditMode()
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
@@ -58,6 +62,7 @@ def setBraid(self, context):
 
 def setAmp(self, context):
     hsys = context.scene.hsysCtrl
+    hsys._particleEditMode()
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
@@ -71,6 +76,7 @@ def setAmp(self, context):
 
 def setFreq(self, context):
     hsys = context.scene.hsysCtrl
+    hsys._particleEditMode()
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
@@ -93,13 +99,13 @@ def setCtrlHair(context, isAddition):
         hsys.ctrlHair[p].isCtrl = isAddition
         if isAddition:
             if not hsys.ctrlHair[p].keys:
-                for i in range(hsys.psys.settings.hair_step+1):
+                for i in range(hsys.hairStep):
                     hsys.ctrlHair[p].keys.append(hairClass.Key(hsys.psys.particles[p].hair_keys[0].co + mathutils.Vector((0,0,.1*i))))
-            for i in range(hsys.psys.settings.hair_step+1):
+            for i in range(hsys.hairStep):
                 hsys.psys.particles[p].hair_keys[i].co = hsys.ctrlHair[p].keys[i].co
                 print(hsys.psys.particles[p].hair_keys[i].co)
         else:
-            for i in range(hsys.psys.settings.hair_step+1):
+            for i in range(hsys.hairStep):
                 hsys.psys.particles[p].hair_keys[i].co = hsys.psys.particles[p].hair_keys[0].co
         utils.particleEditNotify()
         hsys.updateCtrlHair(hsys.ctrlHair[p])

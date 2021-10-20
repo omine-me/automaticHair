@@ -20,6 +20,7 @@ if "bpy" in locals():
     imp.reload(update)
     imp.reload(const)
     imp.reload(io)
+    imp.reload(cpyutils)
 else:
     from . import main
     from . import hairClass
@@ -27,6 +28,7 @@ else:
     from . import update
     from . import const
     from . import io
+    from . import cpyutils
 
 import bpy
 from bpy.props import (

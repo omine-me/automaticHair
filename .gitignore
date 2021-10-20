@@ -1,2 +1,5 @@
 __pycache__/
-cython/
+cpy/unused/
+cpy/build/
+cpy/.vscode/
+cpy/.vs/

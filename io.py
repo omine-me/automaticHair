@@ -2,6 +2,7 @@ import bpy, mathutils, struct
 import numpy as np
 from . import utils, const
 from .hairClass import *
+import datetime
 
 """
 data structure:
@@ -58,7 +59,7 @@ def load(path):
     hsysCtrl._particleEditMode()
     hsysCtrl._setDepsgpaph()
     for i in hsysCtrl.parentNum:
-        for j in range(hsysCtrl.psys.settings.hair_step):
+        for j in range(hsysCtrl.hairStep):
             t = j*8
             hsysCtrl.psys.particles[i].hair_keys[j+1].co = data[i,2+t:5+t]
     utils.particleEditNotify()
@@ -81,7 +82,7 @@ def load_data_file(path):
 
     parents = []
     #get hair count
-    for i in range(10000):
+    for i in range(const.DEFAULTHAIRNUM):
         num_of_vertices = int.from_bytes(data[current_num:current_num+4], "little")
         current_num += 4
         if num_of_vertices == 1:
@@ -94,11 +95,13 @@ def load_data_file(path):
 
     file.close()
 
+    print("end hair count check",datetime.datetime.now())
+
     bpy.types.Scene.hsysCtrl = HairCtrlSystem(parents, utils.importBaseObj(), isFromData=True)
     hsysCtrl = bpy.context.scene.hsysCtrl
     # hsysCtrl._particleEditMode()
     hsysCtrl._setDepsgpaph()
-
+    print("end ctrlhair init",datetime.datetime.now())
 
     current_num = 0 #reset location in data array
     num_of_strand = 0
@@ -121,7 +124,7 @@ def load_data_file(path):
             parti.hair_keys[k].co = mathutils.Vector((hex_to_float(data[current_num:current_num+4]), -hex_to_float(data[current_num+8:current_num+12]), hex_to_float(data[current_num+4:current_num+8])))
             # k.co = mathutils.Vector((hex_to_float(data[current_num:current_num+4]), -hex_to_float(data[current_num+8:current_num+12]), hex_to_float(data[current_num+4:current_num+8])))
             current_num += 12
-    
+    print("end ctrl hair set",datetime.datetime.now())
     utils.particleEditNotify()
-    # hsysCtrl.setArrayedChild()
     hsysCtrl.updatePos()
+    print("end load",datetime.datetime.now())
