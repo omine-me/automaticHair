@@ -144,7 +144,7 @@ class AUTOHAIR_OT_Translate(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        context.scene.hsysCtrl.updatePos()
+        update.setPosUpdate(context)
         # print(context.scene.hsysCtrl.ctrlHair[0].keys[1].co)
         return {'FINISHED'}
 

@@ -1,6 +1,7 @@
 // #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <math.h>
+#include <time.h>
 
 static PyObject * sample_add(PyObject *self, PyObject *args) {
     int x, y, z;
@@ -135,10 +136,16 @@ void dot_fl_v3v3(double *c, double a[], double b[]){
 void norm_v3_v3(double *a, double b[]){
   double l = sqrt(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]);
   // printf("%lf\n", l);
-  a[0] = b[0]/l;
+  a[0] = b[0]*l;
   a[1] = b[1]/l;
   // printf("%lf\n", a[0]);
   a[2] = b[2]/l;
+}
+void mul_v3_v3s1(double *c, double a[], double b){
+  c[0] = a[0]*b;
+  c[1] = a[1]*b;
+  // printf("%lf\n", a[0]);
+  c[2] = a[2]*b;
 }
 void dainyu_double(double *c, double a[]){
   c[0] = a[0];
@@ -160,6 +167,30 @@ void mul_qt_qtqt_internal(double *q, double a[],double b[]){
   q[0] = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
   q[1] = a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2];
   q[2] = a[0] * b[2] + a[2] * b[0] + a[3] * b[1] - a[1] * b[3];
+}
+void mul_v3_qtv3_internal(double *r, double q[]){
+    double t0, t1, t2;
+
+    t0 = -q[1] * r[0] - q[2] * r[1] - q[3] * r[2];
+    t1 = q[0] * r[0] + q[2] * r[2] - q[3] * r[1];
+    t2 = q[0] * r[1] + q[3] * r[0] - q[1] * r[2];
+    r[2] = q[0] * r[2] + q[1] * r[1] - q[2] * r[0];
+    r[0] = t1;
+    r[1] = t2;
+
+    t1 = t0 * -q[1] + r[0] * q[0] - r[1] * q[3] + r[2] * q[2];
+    t2 = t0 * -q[2] + r[1] * q[0] - r[2] * q[1] + r[0] * q[3];
+    r[2] = t0 * -q[3] + r[2] * q[0] - r[0] * q[2] + r[1] * q[1];
+    r[0] = t1;
+    r[1] = t2;
+    // double tmp = -q[1] * r[0] - q[2] * r[1] - q[3] * r[2];
+    // r[2] = q[0] * r[2] + q[1] * r[1] - q[2] * r[0];
+    // r[0] = q[0] * r[0] + q[2] * r[2] - q[3] * r[1];
+    // r[1] = q[0] * r[1] + q[3] * r[0] - q[1] * r[2];
+
+    // v[2] = tmp * -q[3] + r[2] * q[0] - r[0] * q[2] + r[1] * q[1];
+    // v[0] = tmp * -q[1] + r[0] * q[0] - r[1] * q[3] + r[2] * q[2];
+    // v[1] = tmp * -q[2] + r[1] * q[0] - r[2] * q[1] + r[0] * q[3]; 
 }
 
 static PyObject * set_key_rotation(PyObject *self, PyObject *args){
@@ -223,7 +254,50 @@ static PyObject * set_key_rotation(PyObject *self, PyObject *args){
 		return Py_BuildValue("OO", resrot1, restan);
 }
 
-
+static PyObject * offset_child(PyObject *self, PyObject *args){
+    PyObject  *raw_rootDiff, *raw_rot, *raw_co;
+    double rootDiff[3], rot[4], co[3], radius, roundness, k, step, random;
+    if(!PyArg_ParseTuple(args, "OdOOdddd", &raw_rootDiff, &radius, &raw_rot, &raw_co, &roundness, &k, &step, &random)){
+			return NULL;
+		}
+    // raw_norm_list = PySequence_List(raw_norm_list);
+    rootDiff[0] =  PyFloat_AsDouble(PyList_GetItem(raw_rootDiff, 0));
+		rootDiff[1] =  PyFloat_AsDouble(PyList_GetItem(raw_rootDiff, 1));
+		rootDiff[2] =  PyFloat_AsDouble(PyList_GetItem(raw_rootDiff, 2));
+    rot[0] =  PyFloat_AsDouble(PyList_GetItem(raw_rot, 0));
+		rot[1] =  PyFloat_AsDouble(PyList_GetItem(raw_rot, 1));
+		rot[2] =  PyFloat_AsDouble(PyList_GetItem(raw_rot, 2));
+		rot[3] =  PyFloat_AsDouble(PyList_GetItem(raw_rot, 3));
+    co[0] =  PyFloat_AsDouble(PyList_GetItem(raw_co, 0));
+		co[1] =  PyFloat_AsDouble(PyList_GetItem(raw_co, 1));
+		co[2] =  PyFloat_AsDouble(PyList_GetItem(raw_co, 2));
+    // for(int i=0;i<4;++i){
+    //    printf("%lf\n", kRot2[i]);
+    // }
+    double tmpCo[3];
+    mul_v3_v3s1(tmpCo, rootDiff, radius);
+    srand(time(NULL));
+    tmpCo[2] = roundness*((double)rand()/RAND_MAX*2-1);
+    mul_v3_qtv3_internal(tmpCo, rot);
+    if (random < 0.0001){
+      tmpCo[0] += ((double)rand()/RAND_MAX*2-1)*random;
+      tmpCo[1] += ((double)rand()/RAND_MAX*2-1)*random;
+      tmpCo[2] += ((double)rand()/RAND_MAX*2-1)*random;
+    }
+    // for(int i=0;i<4;++i){
+    //   // printf("%lf\n", kRot1[i]);
+    // }
+    // for(int i=0;i<3;++i){
+    //   // printf("%lf\n", tan[i]);
+    // }
+    
+    PyObject* resCo = PyList_New(3);
+    PyList_SetItem(resCo, 0, Py_BuildValue("d", co[0]+tmpCo[0]));
+		PyList_SetItem(resCo, 1, Py_BuildValue("d", co[1]+tmpCo[1]));
+		PyList_SetItem(resCo, 2, Py_BuildValue("d", co[2]+tmpCo[2]));
+		// // printf(raw_r_list);
+		return resCo;
+}
 
 
 
@@ -238,6 +312,7 @@ static PyMethodDef CpyutilsMethods[] = {
     {"mul_qt_qtqt",  (PyCFunction)mul_qt_qtqt, METH_VARARGS, "mul_qt_qtqt."},
     {"axis_angle_to_quat",  (PyCFunction)axis_angle_to_quat, METH_VARARGS, "axis_angle_to_quat."},
     {"set_key_rotation",  (PyCFunction)set_key_rotation, METH_VARARGS, "set_key_rotation."},
+    {"offset_child",  (PyCFunction)offset_child, METH_VARARGS, "offset_child."},
     {NULL, NULL, 0, NULL}
 };
 

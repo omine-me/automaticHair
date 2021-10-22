@@ -1,6 +1,13 @@
 import bpy, mathutils
 from . import utils, hairClass
 
+def setPosUpdate(self, context):
+    hsys = context.scene.hsysCtrl
+    hsys._particleEditMode()
+    hsys._setDepsgpaph()
+    selected = hsys.getSelected()
+    context.scene.hsysCtrl.updatePos(selected.keys())
+
 def setRadius(self, context):
     hsys = context.scene.hsysCtrl
     # print(hsys.ctrlHair[0].keys[1].co)

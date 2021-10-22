@@ -117,6 +117,8 @@ def load_data_file(path):
         parti = psys.particles[i]
         if num_of_vertices != 100:
             current_num += 12
+            for k in range(100):
+                parti.hair_keys[k].co = parti.hair_keys[0].co
             continue
         # for k in c.keys[1:]:
         for k in range(100):
