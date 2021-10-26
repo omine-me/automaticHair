@@ -145,10 +145,10 @@ class HairCtrlSystem:
         C.scene.hsysTar._setDepsgpaph()
         if p.isCtrl:
             self.parentNum.add(p.ctrlNum)
-            self.parentWeight[p.ctrlNum] = 1
+            # self.parentWeight[p.ctrlNum] = 1
             #すべてをclosestpos ->引っかかったのを remove 後append
             for i in range(C.scene.hsysTar.psys.settings.count):
-                if i in self.NotParentNum:
+                if i in self.notParentNum:
                     _, parNum = C.scene.hsysTar._getClosestParNum(i, self.parentNum)
                     # check whether the tarHair belongs to new ctrl hair 
                     if parNum == p.ctrlNum:
@@ -170,7 +170,7 @@ class HairCtrlSystem:
                             break
         else:
             self.parentNum.discard(p.ctrlNum)
-            self.parentWeight.pop(p.cutlNum, None)
+            # self.parentWeight.pop(p.cutlNum, None)
             for t in p.tarHair:
                 parNumIdx, parNum = C.scene.hsysTar._getClosestParNum(t.num, self.parentNum)
                 for ctIdx, h in enumerate(C.scene.hsysCtrl.ctrlHair):
@@ -191,21 +191,6 @@ class HairCtrlSystem:
 
     def _setDepsgpaph(self):
         self.psys = self.ctrlObj.evaluated_get(bpy.context.evaluated_depsgraph_get()).particle_systems[self.psysName]
-
-    
-    # def setArrayedChild(self):
-    #     # for p in self.ctrlHair:
-    #     for p in self.parentNum:
-    #         # if p.isCtrl:
-    #         self._particleEditMode()
-    #         self._setDepsgpaph()
-    #         prevTan = np.array([0., 0., 0.])
-    #         for s in range(self.psys.settings.hair_step+1):
-    #             prevTan = self._setKeyRotation(self.ctrlHair[p], s, prevTan)
-    #         self.ctrlHair[p].keys[-1].rot = self.ctrlHair[p].keys[-2].rot #set last keys
-    #         bpy.context.scene.hsysTar._offsetChild(self.ctrlHair[p])
-    #         particleEditNotify()
-    #     self._particleEditMode()
     
     def setArrayedChild(self, selected=None):
         # for p in self.ctrlHair:
@@ -255,10 +240,6 @@ class HairCtrlSystem:
                 # self.ctrlHair[i].keys[j].co = self.psys.particles[i].hair_keys[j].co
                 ### do not enter directly because it is shallow copy
                 self.ctrlHair[i].keys[j].co = mathutils.Vector(self.psys.particles[i].hair_keys[j].co)
-        # print(self.ctrlHair[1].keys[99].co)
-        # print(self.ctrlHair[10].keys[99].co)
-        # print(self.ctrlHair[25].keys[99].co)
-        # print(self.ctrlHair[71].keys[99].co)
         particleEditNotify()
     
     def updatePos(self, selected=None):
@@ -290,7 +271,7 @@ class HairTarSystem:
         childPos = const.rootDataPos[child]
         
         minDistance = 99999
-        shortestParIdx = -1
+        shortestParIdx = shortestPar = -1
         for idx, p in enumerate(parents):
             # parPos = bpy.context.scene.hsysTar.psys.particles[p].hair_keys[0].co
             parPos = const.rootDataPos[p]
@@ -317,43 +298,12 @@ class HairTarSystem:
             if p.ctrlNum == c.num:
                 for k in range(1, self.hairStep):
                     # pass
-                    parti.hair_keys[k].co = p.keys[k].co
+                    parti.hair_keys[k].co = mathutils.Vector(p.keys[k].co)
+                    # parti.hair_keys[k].co = p.keys[k].co
             else:
                 for k in range(1, self.hairStep):
                     parti.hair_keys[k].co = mathutils.Vector(cpyutils.offset_child(list(c.rootDiff), p.keys[k].radius, list(p.keys[k].rot),list(p.keys[k].co), p.roundness, k, self.hairStep, p.keys[k].random))
                     # parti.hair_keys[k].co = mathutils.Vector(cpyutils.offset_child(c.rootDiff, p.keys[k].radius, p.keys[k].rot,list(p.keys[k].co), p.roundness, k, self.hairStep, p.keys[k].random))
-                    # # pass
-                    # # c.rootDiff, p.keys[k].radius&rot&co, p.roundness, # k,step, p.keys[k].random
-                    # co = mul_v3_v3s1(c.rootDiff, p.keys[k].radius)
-                    # co[2] = p.roundness * (np.random.rand()*2-1)
-                    # co = cpyutils.mul_v3_qtv3(list(p.keys[k].rot), co)
-                    # if (p.keys[k].braid != 0):
-                    #     co = self._doKink(p, co, k/self.hairStep,k)
-                    # if (p.keys[k].random != 0.):
-                    #     co = (co[0] + (np.random.rand()*2-1)*p.keys[k].random, co[1] + (np.random.rand()*2-1)*p.keys[k].random, co[2] + (np.random.rand()*2-1)*p.keys[k].random)
-                    # # psys.particles[c.num].hair_keys[k].co = self.checkIfInside(p.keys[k].co + mathutils.Vector(co))
-                    # # print(p.keys[k].co,  mathutils.Vector(co), mathutils.Vector(p.keys[k].co + mathutils.Vector(co)))
-                    # parti.hair_keys[k].co = p.keys[k].co + mathutils.Vector(co)
-                    # # setattr(psys.particles[c.num].hair_keys[k], "co", p.keys[k].co + mathutils.Vector(co))
-
-    # def tmp(self,p):
-    #     import time
-    #     s = time.perf_counter()
-    #     for c in p.tarHair:
-    #         for k in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
-    #             co = mul_v3_v3s1(c.rootDiff, p.keys[k].radius)
-    #             co[2] = p.roundness * (np.random.rand()*2-1)
-    #             co = 
-    # (p.keys[k].rot, co)
-    #             if (p.keys[k].braid != 0):
-    #                 co = self._doKink(p, co, k/bpy.context.scene.hsysTar.psys.settings.hair_step+1,k)
-    #             if (p.keys[k].random != 0.):
-    #                 co = (co[0] + (np.random.rand()*2-1)*p.keys[k].random, co[1] + (np.random.rand()*2-1)*p.keys[k].random, co[2] + (np.random.rand()*2-1)*p.keys[k].random)
-    #             # bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[k].co = p.keys[k].co + mathutils.Vector(co)
-    #             setattr(bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[k], "co", p.keys[k].co + mathutils.Vector(co))
-
-    #     e = time.perf_counter()
-    #     print("test_second:", e - s)
         
     def _doKink(self, p, co, time, k):
         # kink = [1., 0., 0.]
@@ -417,18 +367,3 @@ class HairTarSystem:
         #     co = result
         # return co
         return state_co
-
-# def tmp(self,c):
-#     import time
-#     s = time.perf_counter()
-#     # for c in p.tarHair:
-#     for k in range(1, bpy.context.scene.hsysTar.psys.settings.hair_step+1):
-#         co = mul_v3_v3s1(c.rootDiff, p.keys[k].radius)
-#         co[2] = p.roundness * (np.random.rand()*2-1)
-#         co = mul_v3_qtv3(p.keys[k].rot, co)
-#         if (p.keys[k].braid != 0):
-#             pass
-#             # co = self._doKink(p, co, k/bpy.context.scene.hsysTar.psys.settings.hair_step+1,k)
-#         if (p.keys[k].random != 0.):
-#             co = (co[0] + (np.random.rand()*2-1)*p.keys[k].random, co[1] + (np.random.rand()*2-1)*p.keys[k].random, co[2] + (np.random.rand()*2-1)*p.keys[k].random)
-#         bpy.context.scene.hsysTar.psys.particles[c.num].hair_keys[k].co = p.keys[k].co + mathutils.Vector(co)

@@ -1,7 +1,7 @@
 import bpy, mathutils
 from . import utils, hairClass
 
-def setPosUpdate(self, context):
+def setPosUpdate(context):
     hsys = context.scene.hsysCtrl
     hsys._particleEditMode()
     hsys._setDepsgpaph()
@@ -110,7 +110,7 @@ def setCtrlHair(context, isAddition):
                     hsys.ctrlHair[p].keys.append(hairClass.Key(hsys.psys.particles[p].hair_keys[0].co + mathutils.Vector((0,0,.1*i))))
             for i in range(hsys.hairStep):
                 hsys.psys.particles[p].hair_keys[i].co = hsys.ctrlHair[p].keys[i].co
-                print(hsys.psys.particles[p].hair_keys[i].co)
+                # print(hsys.psys.particles[p].hair_keys[i].co)
         else:
             for i in range(hsys.hairStep):
                 hsys.psys.particles[p].hair_keys[i].co = hsys.psys.particles[p].hair_keys[0].co
@@ -118,4 +118,4 @@ def setCtrlHair(context, isAddition):
         hsys.updateCtrlHair(hsys.ctrlHair[p])
         hsys._particleEditMode()
         hsys._setDepsgpaph()
-    hsys.setArrayedChild()
+    hsys.setArrayedChild(selected.keys())

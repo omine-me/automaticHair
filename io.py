@@ -16,14 +16,14 @@ def save(path):
     hc._particleEditMode()
     hc._setDepsgpaph()
     # hairCount , 2 + (3 + 5) * hairStep
-    data = np.zeros((hc.psys.settings.count, 2 + (3 + 5) * (hc.psys.settings.hair_step)))
+    data = np.zeros((hc.psys.settings.count, 2 + (3 + 5) * (hc.psys.settings.hair_step+1)))
 
     for i in range(hc.psys.settings.count):
         if ctrlHair[i].isCtrl:
             tmp1=[float(ctrlHair[i].isCtrl), \
                 ctrlHair[i].roundness]
             # tmp2=[i for i in ctrlHair[i]]
-            tmp2=[[j.co[0], j.co[1], j.co[2], j.radius, j.random, j.braid, j.amp, j.freq] for j in ctrlHair[i].keys[1:]]
+            tmp2=[[j.co[0], j.co[1], j.co[2], j.radius, j.random, j.braid, j.amp, j.freq] for j in ctrlHair[i].keys[:]]
             # if braid is 0, amp and freq wiil be 0 to clean data
             for l in tmp2:
                 if l[5] == 0:
@@ -42,12 +42,13 @@ def load(path):
     for idx, c in enumerate(data[:,0]):
         if c:
             parent.append(idx)
-
+        
+    # print(parent)
     bpy.types.Scene.hsysCtrl = HairCtrlSystem(parent, utils.importBaseObj())
     for i in range(const.DEFAULTHAIRNUM):
         c = bpy.types.Scene.hsysCtrl.ctrlHair[i]
         c.roundness = data[i,1]
-        for idx, k in enumerate(c.keys[1:]):
+        for idx, k in enumerate(c.keys[:]):
             t = idx*8
             k.co = mathutils.Vector(data[i,2+t:5+t])
             k.radius = data[i,5+t] #5,13,21
@@ -59,9 +60,10 @@ def load(path):
     hsysCtrl._particleEditMode()
     hsysCtrl._setDepsgpaph()
     for i in hsysCtrl.parentNum:
-        for j in range(hsysCtrl.hairStep):
+        row=data[i,:]
+        for j in range(1,hsysCtrl.hairStep):
             t = j*8
-            hsysCtrl.psys.particles[i].hair_keys[j+1].co = data[i,2+t:5+t]
+            hsysCtrl.psys.particles[i].hair_keys[j].co = row[2+t:5+t]
     utils.particleEditNotify()
     hsysCtrl.setArrayedChild()
 

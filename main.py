@@ -140,7 +140,7 @@ class AUTOHAIR_OT_Translate(bpy.types.Operator):
 
     bl_idname = "autohair.translate"
     bl_label = "Update Position"
-    bl_description = "Update positions of target hair"
+    bl_description = "Update positions of Target Hair"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
