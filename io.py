@@ -39,7 +39,7 @@ def load(path):
     data = np.load(path)
     data = data["arr_0"]
     parent = []
-    for idx, c in enumerate(data[:,0]):
+    for idx, c in enumerate(data[:const.DEFAULTHAIRNUM,0]):
         if c:
             parent.append(idx)
         

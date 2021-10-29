@@ -1,5 +1,6 @@
 // #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <time.h>
 
@@ -133,6 +134,9 @@ void dot_fl_v3v3(double *c, double a[], double b[]){
     *c = 1;
   }
 }
+void norm_f1_v3(double *a, double b[]){
+  *a = sqrt(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]);
+}
 void norm_v3_v3(double *a, double b[]){
   double l = sqrt(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]);
   // printf("%lf\n", l);
@@ -147,11 +151,32 @@ void mul_v3_v3s1(double *c, double a[], double b){
   // printf("%lf\n", a[0]);
   c[2] = a[2]*b;
 }
-void dainyu_double(double *c, double a[]){
+void muladd_v3_v3s1(double *c, double a[], double b){
+  c[0] += a[0]*b;
+  c[1] += a[1]*b;
+  // printf("%lf\n", a[0]);
+  c[2] += a[2]*b;
+}
+void add_v3_v3v3(double *c, double a[], double b[]){
+  c[0] = a[0]+b[0];
+  c[1] = a[1]+b[1];
+  c[2] = a[2]+b[2];
+}
+void sub_v3_v3v3(double *c, double a[], double b[]){
+  c[0] = a[0] - b[0];
+  c[1] = a[1] - b[1];
+  c[2] = a[2] - b[2];
+}
+void dainyu_double4(double *c, double a[]){
   c[0] = a[0];
   c[1] = a[1];
   c[2] = a[2];
   c[3] = a[3];
+}
+void dainyu_double3(double *c, double a[]){
+  c[0] = a[0];
+  c[1] = a[1];
+  c[2] = a[2];
 }
 void axis_angle_to_quat_internal(double *q, double n[], double angle){
   double phi = 0.5 * angle;
@@ -168,21 +193,21 @@ void mul_qt_qtqt_internal(double *q, double a[],double b[]){
   q[1] = a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2];
   q[2] = a[0] * b[2] + a[2] * b[0] + a[3] * b[1] - a[1] * b[3];
 }
-void mul_v3_qtv3_internal(double *r, double q[]){
+void mul_v3_qtv3_internal(double *v, double r[], double q[]){
     double t0, t1, t2;
 
     t0 = -q[1] * r[0] - q[2] * r[1] - q[3] * r[2];
     t1 = q[0] * r[0] + q[2] * r[2] - q[3] * r[1];
     t2 = q[0] * r[1] + q[3] * r[0] - q[1] * r[2];
-    r[2] = q[0] * r[2] + q[1] * r[1] - q[2] * r[0];
-    r[0] = t1;
-    r[1] = t2;
+    v[2] = q[0] * r[2] + q[1] * r[1] - q[2] * r[0];
+    v[0] = t1;
+    v[1] = t2;
 
-    t1 = t0 * -q[1] + r[0] * q[0] - r[1] * q[3] + r[2] * q[2];
-    t2 = t0 * -q[2] + r[1] * q[0] - r[2] * q[1] + r[0] * q[3];
-    r[2] = t0 * -q[3] + r[2] * q[0] - r[0] * q[2] + r[1] * q[1];
-    r[0] = t1;
-    r[1] = t2;
+    t1 = t0 * -q[1] + v[0] * q[0] - v[1] * q[3] + v[2] * q[2];
+    t2 = t0 * -q[2] + v[1] * q[0] - v[2] * q[1] + v[0] * q[3];
+    v[2] = t0 * -q[3] + v[2] * q[0] - v[0] * q[2] + v[1] * q[1];
+    v[0] = t1;
+    v[1] = t2;
     // double tmp = -q[1] * r[0] - q[2] * r[1] - q[3] * r[2];
     // r[2] = q[0] * r[2] + q[1] * r[1] - q[2] * r[0];
     // r[0] = q[0] * r[0] + q[2] * r[2] - q[3] * r[1];
@@ -191,6 +216,69 @@ void mul_v3_qtv3_internal(double *r, double q[]){
     // v[2] = tmp * -q[3] + r[2] * q[0] - r[0] * q[2] + r[1] * q[1];
     // v[0] = tmp * -q[1] + r[0] * q[0] - r[1] * q[3] + r[2] * q[2];
     // v[1] = tmp * -q[2] + r[1] * q[0] - r[2] * q[1] + r[0] * q[3]; 
+}
+
+void doKink(double *co, double oriCo[], double braid, double amp, double freq, double time, double k, double rot[]){
+  double t = time * freq * M_PI;
+
+  //when emit from face
+  double dt = fabs(t);
+  dt = dt<0 ? 0 : (dt > M_PI ? M_PI : dt);// clamp 0 - pi
+  dt = sin(dt/2.0);
+
+  double parVec[3];
+  sub_v3_v3v3(parVec, oriCo, co);
+
+  double yVec[3], zVec[3];
+  double yHot[3] = {0.0, 1.0, 0.0};
+  double zHot[3] = {0.0, 0.0, 1.0};
+  mul_v3_qtv3_internal(yVec, yHot, rot);
+  mul_v3_qtv3_internal(zVec, zHot, rot);
+
+  parVec[0] = -parVec[0];
+  parVec[1] = -parVec[1];
+  parVec[2] = -parVec[2];
+  double vecOne[3];
+  norm_v3_v3(vecOne, parVec);
+
+  double inpY, inpZ;
+  dot_fl_v3v3(&inpY, yVec, vecOne);
+  dot_fl_v3v3(&inpZ, zVec, vecOne);
+
+  double stateCo[3];
+  if (inpY > 0.5){
+    dainyu_double3(stateCo, yVec);
+    mul_v3_v3s1(yVec, yVec, amp*cos(t));
+    mul_v3_v3s1(zVec, zVec, amp/2.0*sin(2.0*t));
+  }else if(inpZ > 0.0){
+    mul_v3_v3s1(stateCo, zVec, sin(M_PI/3.0));
+    muladd_v3_v3s1(stateCo, yVec, -0.5);
+    mul_v3_v3s1(yVec, yVec, -amp*cos(t+M_PI));
+    mul_v3_v3s1(zVec, zVec, amp/2.0*cos(2.0*t+M_PI/6.0));
+  }else{
+    mul_v3_v3s1(stateCo, zVec, -sin(M_PI/3.0));
+    muladd_v3_v3s1(stateCo, yVec, -0.5);
+    mul_v3_v3s1(yVec, yVec, amp*-sin(t+M_PI/6.0));
+    mul_v3_v3s1(zVec, zVec, amp/2.0*-sin(2.0*t+M_PI/3.0));
+  }
+
+  mul_v3_v3s1(stateCo, stateCo, amp);
+  add_v3_v3v3(stateCo, stateCo, oriCo);
+  sub_v3_v3v3(parVec, co, stateCo);
+
+  double length;
+  norm_f1_v3(&length, parVec);
+  mul_v3_v3s1(parVec, parVec, length < amp/2.0 ? length:amp/2.0);
+
+  double zeroVec[3] = {0,0,0};
+  add_v3_v3v3(stateCo, zeroVec, yVec);
+  add_v3_v3v3(stateCo, stateCo, zVec);
+  add_v3_v3v3(stateCo, stateCo, parVec);
+  mul_v3_v3s1(stateCo, stateCo, braid);
+
+  co[0] = stateCo[0];
+  co[1] = stateCo[1];
+  co[2] = stateCo[2];
 }
 
 static PyObject * set_key_rotation(PyObject *self, PyObject *args){
@@ -224,7 +312,7 @@ static PyObject * set_key_rotation(PyObject *self, PyObject *args){
     //   printf("%lf\n", tan[i]);
     // }
     if (cosangle > 0.999999){
-      dainyu_double(kRot1, kRot2);
+      dainyu_double4(kRot1, kRot2);
     }else{
       angle = acos(cosangle);
       double cross[3];
@@ -256,8 +344,8 @@ static PyObject * set_key_rotation(PyObject *self, PyObject *args){
 
 static PyObject * offset_child(PyObject *self, PyObject *args){
     PyObject  *raw_rootDiff, *raw_rot, *raw_co;
-    double rootDiff[3], rot[4], co[3], radius, roundness, k, step, random;
-    if(!PyArg_ParseTuple(args, "OdOOdddd", &raw_rootDiff, &radius, &raw_rot, &raw_co, &roundness, &k, &step, &random)){
+    double rootDiff[3], rot[4], co[3], radius, roundness, k, step, random, braid, amp, freq;
+    if(!PyArg_ParseTuple(args, "OdOOddddddd", &raw_rootDiff, &radius, &raw_rot, &raw_co, &roundness, &k, &step, &random, &braid, &amp, &freq)){
 			return NULL;
 		}
     // raw_norm_list = PySequence_List(raw_norm_list);
@@ -278,8 +366,13 @@ static PyObject * offset_child(PyObject *self, PyObject *args){
     mul_v3_v3s1(tmpCo, rootDiff, radius);
     srand(time(NULL));
     tmpCo[2] = roundness*((double)rand()/RAND_MAX*2-1);
-    mul_v3_qtv3_internal(tmpCo, rot);
-    if (random < 0.0001){
+    mul_v3_qtv3_internal(tmpCo, tmpCo, rot);
+
+    if (braid > 0.0001){
+      doKink(tmpCo, co, braid, amp, freq, k/step, k, rot);
+    }
+
+    if (random > 0.0001){
       tmpCo[0] += ((double)rand()/RAND_MAX*2-1)*random;
       tmpCo[1] += ((double)rand()/RAND_MAX*2-1)*random;
       tmpCo[2] += ((double)rand()/RAND_MAX*2-1)*random;

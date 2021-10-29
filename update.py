@@ -16,15 +16,17 @@ def setRadius(self, context):
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
     # print(hsys.ctrlHair[0].keys[1].co)
+    context.scene.hsysTar._particleEditMode()
+    context.scene.hsysTar._setDepsgpaph()
     for p, k in selected.items():
         for c in k:
             # print(p, c)
             hsys.ctrlHair[p].keys[c].radius = context.scene.autoHairRadius
         # print(hsys.ctrlHair[p].keys[1].co)
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[p])
-        utils.particleEditNotify()
-        hsys._particleEditMode()
-        # hsys._setDepsgpaph()
+    utils.particleEditNotify()
+    hsys._particleEditMode()
+    # hsys._setDepsgpaph()
 
 def setRandom(self, context):
     hsys = context.scene.hsysCtrl
@@ -32,13 +34,15 @@ def setRandom(self, context):
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
+    context.scene.hsysTar._particleEditMode()
+    context.scene.hsysTar._setDepsgpaph()
     for p, k in selected.items():
         for c in k:
             hsys.ctrlHair[p].keys[c].random = context.scene.autoHairRandom
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[p])
-        utils.particleEditNotify()
-        hsys._particleEditMode()
-        # hsys._setDepsgpaph()
+    utils.particleEditNotify()
+    hsys._particleEditMode()
+    # hsys._setDepsgpaph()
 
 def setRoundness(self, context):
     hsys = context.scene.hsysCtrl
@@ -46,12 +50,14 @@ def setRoundness(self, context):
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
+    context.scene.hsysTar._particleEditMode()
+    context.scene.hsysTar._setDepsgpaph()
     for p, k in selected.items():
         hsys.ctrlHair[p].roundness = context.scene.autoHairRoundness
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[p])
-        utils.particleEditNotify()
-        hsys._particleEditMode()
-        # hsys._setDepsgpaph()
+    utils.particleEditNotify()
+    hsys._particleEditMode()
+    # hsys._setDepsgpaph()
 
 def setBraid(self, context):
     hsys = context.scene.hsysCtrl
@@ -59,27 +65,31 @@ def setBraid(self, context):
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
+    context.scene.hsysTar._particleEditMode()
+    context.scene.hsysTar._setDepsgpaph()
     for p, k in selected.items():
         for c in k:
             hsys.ctrlHair[p].keys[c].braid = context.scene.autoHairBraid
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[p])
-        utils.particleEditNotify()
-        hsys._particleEditMode()
-        # hsys._setDepsgpaph()
+    utils.particleEditNotify()
+    hsys._particleEditMode()
+    # hsys._setDepsgpaph()
 
 def setAmp(self, context):
     hsys = context.scene.hsysCtrl
     hsys._particleEditMode()
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
+    context.scene.hsysTar._particleEditMode()
+    context.scene.hsysTar._setDepsgpaph()
     # hsys._setDepsgpaph()
     for p, k in selected.items():
         for c in k:
             hsys.ctrlHair[p].keys[c].amp = context.scene.autoHairAmp
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[p])
-        utils.particleEditNotify()
-        hsys._particleEditMode()
-        # hsys._setDepsgpaph()
+    utils.particleEditNotify()
+    hsys._particleEditMode()
+    # hsys._setDepsgpaph()
 
 def setFreq(self, context):
     hsys = context.scene.hsysCtrl
@@ -87,13 +97,15 @@ def setFreq(self, context):
     hsys._setDepsgpaph()
     selected = hsys.getSelected()
     # hsys._setDepsgpaph()
+    context.scene.hsysTar._particleEditMode()
+    context.scene.hsysTar._setDepsgpaph()
     for p, k in selected.items():
         for c in k:
             hsys.ctrlHair[p].keys[c].freq = context.scene.autoHairFreq
         context.scene.hsysTar._offsetChild(hsys.ctrlHair[p])
-        utils.particleEditNotify()
-        hsys._particleEditMode()
-        # hsys._setDepsgpaph()
+    utils.particleEditNotify()
+    hsys._particleEditMode()
+    # hsys._setDepsgpaph()
 
 def setCtrlHair(context, isAddition):
     hsys = context.scene.hsysCtrl

@@ -301,69 +301,80 @@ class HairTarSystem:
                     parti.hair_keys[k].co = mathutils.Vector(p.keys[k].co)
                     # parti.hair_keys[k].co = p.keys[k].co
             else:
+                # print("ctrlNum!=c.num")
                 for k in range(1, self.hairStep):
-                    parti.hair_keys[k].co = mathutils.Vector(cpyutils.offset_child(list(c.rootDiff), p.keys[k].radius, list(p.keys[k].rot),list(p.keys[k].co), p.roundness, k, self.hairStep, p.keys[k].random))
-                    # parti.hair_keys[k].co = mathutils.Vector(cpyutils.offset_child(c.rootDiff, p.keys[k].radius, p.keys[k].rot,list(p.keys[k].co), p.roundness, k, self.hairStep, p.keys[k].random))
+                    parti.hair_keys[k].co = mathutils.Vector(cpyutils.offset_child(list(c.rootDiff), \
+                                                                                    p.keys[k].radius, \
+                                                                                    list(p.keys[k].rot),\
+                                                                                    list(p.keys[k].co),\
+                                                                                    p.roundness,\
+                                                                                    k,\
+                                                                                    self.hairStep,\
+                                                                                    p.keys[k].random,\
+                                                                                    p.keys[k].braid,\
+                                                                                    p.keys[k].amp,\
+                                                                                    p.keys[k].freq))
         
-    def _doKink(self, p, co, time, k):
-        # kink = [1., 0., 0.]
-        # q1 = [1., 0., 0., 0.]
-        t = time * p.keys[k].freq * np.pi
+### inplemented in cpyutils
+    # def _doKink(self, p, co, time, k):
+    #     # kink = [1., 0., 0.]
+    #     # q1 = [1., 0., 0., 0.]
+    #     t = time * p.keys[k].freq * np.pi
 
-        #when emit from face
-        dt = np.abs(t)
-        dt = clamp(dt, 0., np.pi)
-        dt = np.sin(dt/2.)
+    #     #when emit from face
+    #     dt = np.abs(t)
+    #     dt = clamp(dt, 0., np.pi)
+    #     dt = np.sin(dt/2.)
 
-        # result = co
-        parVec = sub_v3_v3v3(p.keys[k].co, co)
+    #     # result = co
+    #     parVec = sub_v3_v3v3(p.keys[k].co, co)
 
-        # PART_KINK_BRAID
-        yVec = mul_v3_qtv3(p.keys[k].rot, [0., 1., 0.])
-        zVec = mul_v3_qtv3(p.keys[k].rot, [0., 0., 1.])
-        # zVec = mul_v3_qtv3(p.keys[k].rot, [1., 0., 0.])
+    #     # PART_KINK_BRAID
+    #     yVec = mul_v3_qtv3(p.keys[k].rot, [0., 1., 0.])
+    #     zVec = mul_v3_qtv3(p.keys[k].rot, [0., 0., 1.])
+    #     # zVec = mul_v3_qtv3(p.keys[k].rot, [1., 0., 0.])
 
-        parVec = -parVec
-        vecOne = norm_v3_v3(parVec)
+    #     parVec = -parVec
+    #     vecOne = norm_v3_v3(parVec)
 
-        inpY = dot_fl_v3v3(yVec, vecOne)
-        inpZ = dot_fl_v3v3(zVec, vecOne)
+    #     inpY = dot_fl_v3v3(yVec, vecOne)
+    #     inpZ = dot_fl_v3v3(zVec, vecOne)
 
-        if(inpY > .5):
-            state_co = yVec
-            yVec = mul_v3_v3s1(yVec, p.keys[k].amp * np.cos(t))
-            zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * np.sin(2. * t))
-        elif(inpZ > 0.):
-            state_co = mul_v3_v3s1(zVec, np.sin(np.pi / 3.0))
-            state_co += mul_v3_v3s1(yVec, -.5)
-            yVec = mul_v3_v3s1(yVec, -p.keys[k].amp*np.cos(t + np.pi /3.))
-            zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * np.cos(2. * t + np.pi / 6.))
-        else:
-            state_co = mul_v3_v3s1(zVec, -np.sin(np.pi/3.))
-            state_co += mul_v3_v3s1(yVec, -.5)
+    #     if(inpY > .5):
+    #         state_co = yVec
+    #         yVec = mul_v3_v3s1(yVec, p.keys[k].amp * np.cos(t))
+    #         zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * np.sin(2. * t))
+    #     elif(inpZ > 0.):
+    #         state_co = mul_v3_v3s1(zVec, np.sin(np.pi / 3.0))
+    #         state_co += mul_v3_v3s1(yVec, -.5)
+    #         yVec = mul_v3_v3s1(yVec, -p.keys[k].amp*np.cos(t + np.pi /3.))
+    #         zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * np.cos(2. * t + np.pi / 6.))
+    #     else:
+    #         state_co = mul_v3_v3s1(zVec, -np.sin(np.pi/3.))
+    #         state_co += mul_v3_v3s1(yVec, -.5)
 
-            yVec = mul_v3_v3s1(yVec, p.keys[k].amp * -np.sin(t + np.pi / 6.))
-            zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * -np.sin(2. * t + np.pi / 3.))
+    #         yVec = mul_v3_v3s1(yVec, p.keys[k].amp * -np.sin(t + np.pi / 6.))
+    #         zVec = mul_v3_v3s1(zVec, p.keys[k].amp / 2. * -np.sin(2. * t + np.pi / 3.))
         
-        state_co = mul_v3_v3s1(state_co, p.keys[k].amp)
-        state_co = add_v3_v3v3(state_co, p.keys[k].co)
-        parVec = sub_v3_v3v3(co, mathutils.Vector(state_co))
+    #     state_co = mul_v3_v3s1(state_co, p.keys[k].amp)
+    #     state_co = add_v3_v3v3(state_co, p.keys[k].co)
+    #     parVec = sub_v3_v3v3(co, mathutils.Vector(state_co))
 
-        length = norm_s1_v3(parVec)
-        parVec = mul_v3_v3s1(parVec, min(length, p.keys[k].amp / 2.))
+    #     length = norm_s1_v3(parVec)
+    #     parVec = mul_v3_v3s1(parVec, min(length, p.keys[k].amp / 2.))
 
-        # state_co = add_v3_v3v3(p.keys[k].co, yVec)
-        state_co = add_v3_v3v3(mathutils.Vector((0,0,0)), yVec)
-        state_co = add_v3_v3v3(state_co, zVec)
-        state_co = add_v3_v3v3(state_co, parVec)
+    #     # state_co = add_v3_v3v3(p.keys[k].co, yVec)
+    #     state_co = add_v3_v3v3(mathutils.Vector((0,0,0)), yVec)
+    #     state_co = add_v3_v3v3(state_co, zVec)
+    #     state_co = add_v3_v3v3(state_co, parVec)
 
-        state_co = mul_v3_v3s1(state_co, p.keys[k].braid)
+    #     state_co = mul_v3_v3s1(state_co, p.keys[k].braid)
 
-        # END OF PART_KINK_BRAID
+    #     # END OF PART_KINK_BRAID
 
-        # if (dt < 1.):
-        #     co = interp_v3_v3v3(co, result, dt)
-        # else:
-        #     co = result
-        # return co
-        return state_co
+    #     # if (dt < 1.):
+    #     #     co = interp_v3_v3v3(co, result, dt)
+    #     # else:
+    #     #     co = result
+    #     # return co
+    #     return state_co
