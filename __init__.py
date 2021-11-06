@@ -32,7 +32,7 @@ else:
 
 import bpy
 from bpy.props import (
-    # IntProperty,
+    IntProperty,
     FloatProperty,
     # FloatVectorProperty,
     # EnumProperty,
@@ -92,6 +92,11 @@ def initProps():
         min=0.0,
         update=update.setFreq
     )
+    scene.defaultHairNum = IntProperty(
+        name="defaultHairNum",
+        description="",
+        default=const.DEFAULTHAIRNUM
+    )
 
 def delProps():
     scene = bpy.types.Scene
@@ -101,6 +106,7 @@ def delProps():
     del scene.autoHairBraid
     del scene.autoHairAmp
     del scene.autoHairFreq
+    del scene.defaultHairNum
     del scene.hsysCtrl
     del scene.hsysTar
 

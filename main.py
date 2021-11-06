@@ -220,8 +220,9 @@ class AUTOHAIR_PT_Menu4(AUTOHAIRPanel, bpy.types.Panel):
     bl_parent_id = "AUTOHAIR_PT_Menu"
     bl_label = "Tools"
     def draw(self, context):
+        layout = self.layout
+        scene = context.scene
         if bpy.context.mode == "PARTICLE":
-            layout = self.layout
-            scene = context.scene
             layout.prop(scene.tool_settings.particle_edit, "use_preserve_length")
             layout.prop(scene.tool_settings.particle_edit, "use_preserve_root")
+        layout.prop(scene, "defaultHairNum")

@@ -39,13 +39,13 @@ def load(path):
     data = np.load(path)
     data = data["arr_0"]
     parent = []
-    for idx, c in enumerate(data[:const.DEFAULTHAIRNUM,0]):
+    for idx, c in enumerate(data[:bpy.context.scene.defaultHairNum,0]):
         if c:
             parent.append(idx)
         
     # print(parent)
     bpy.types.Scene.hsysCtrl = HairCtrlSystem(parent, utils.importBaseObj())
-    for i in range(const.DEFAULTHAIRNUM):
+    for i in range(bpy.context.scene.defaultHairNum):
         c = bpy.types.Scene.hsysCtrl.ctrlHair[i]
         c.roundness = data[i,1]
         for idx, k in enumerate(c.keys[:]):
@@ -84,7 +84,7 @@ def load_data_file(path):
 
     parents = []
     #get hair count
-    for i in range(const.DEFAULTHAIRNUM):
+    for i in range(bpy.context.scene.defaultHairNum):
         num_of_vertices = int.from_bytes(data[current_num:current_num+4], "little")
         current_num += 4
         if num_of_vertices == 1:
@@ -112,7 +112,7 @@ def load_data_file(path):
     
     #set positions
     psys = hsysCtrl.psys
-    for i in range(const.DEFAULTHAIRNUM):
+    for i in range(bpy.context.scene.defaultHairNum):
         c = bpy.types.Scene.hsysCtrl.ctrlHair[i]
         num_of_vertices = int.from_bytes(data[current_num:current_num+4], "little")
         current_num += 4

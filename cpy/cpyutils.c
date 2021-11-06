@@ -4,16 +4,16 @@
 #include <math.h>
 #include <time.h>
 
-static PyObject * sample_add(PyObject *self, PyObject *args) {
-    int x, y, z;
+// static PyObject * sample_add(PyObject *self, PyObject *args) {
+//     int x, y, z;
 
-    if (!PyArg_ParseTuple(args, "ii", &x, &y)) {
-        return NULL;
-    }
+//     if (!PyArg_ParseTuple(args, "ii", &x, &y)) {
+//         return NULL;
+//     }
 
-    z = x + y;
-    return PyLong_FromLong(z);
-}
+//     z = x + y;
+//     return PyLong_FromLong(z);
+// }
 
 static PyObject * mul_v3_qtv3(PyObject *self, PyObject *args){
     PyObject  *raw_r_list, *raw_q_list;
@@ -140,7 +140,7 @@ void norm_f1_v3(double *a, double b[]){
 void norm_v3_v3(double *a, double b[]){
   double l = sqrt(b[0]*b[0]+b[1]*b[1]+b[2]*b[2]);
   // printf("%lf\n", l);
-  a[0] = b[0]*l;
+  a[0] = b[0]/l;
   a[1] = b[1]/l;
   // printf("%lf\n", a[0]);
   a[2] = b[2]/l;
@@ -216,6 +216,30 @@ void mul_v3_qtv3_internal(double *v, double r[], double q[]){
     // v[2] = tmp * -q[3] + r[2] * q[0] - r[0] * q[2] + r[1] * q[1];
     // v[0] = tmp * -q[1] + r[0] * q[0] - r[1] * q[3] + r[2] * q[2];
     // v[1] = tmp * -q[2] + r[1] * q[0] - r[2] * q[1] + r[0] * q[3]; 
+}
+void mul_v3_qtv3_internal_old(double *r, double q[]){
+    double t0, t1, t2;
+    // printf("tmpCo:");
+    // printf("%lf\n",r[0]);
+    // printf("%lf\n",r[1]);
+    // printf("%lf\n",r[2]); 
+    t0 = -q[1] * r[0] - q[2] * r[1] - q[3] * r[2];
+    t1 = q[0] * r[0] + q[2] * r[2] - q[3] * r[1];
+    t2 = q[0] * r[1] + q[3] * r[0] - q[1] * r[2];
+    r[2] = q[0] * r[2] + q[1] * r[1] - q[2] * r[0];
+    r[0] = t1;
+    r[1] = t2;
+    // printf("%lf\n",t0);
+    // printf("%lf\n",t1);
+    // printf("%lf\n",t2); 
+    // for(int i=0;i<3;++i){
+    //    printf("%lf\n", r[i]);
+    // }
+    t1 = t0 * -q[1] + r[0] * q[0] - r[1] * q[3] + r[2] * q[2];
+    t2 = t0 * -q[2] + r[1] * q[0] - r[2] * q[1] + r[0] * q[3];
+    r[2] = t0 * -q[3] + r[2] * q[0] - r[0] * q[2] + r[1] * q[1];
+    r[0] = t1;
+    r[1] = t2;
 }
 
 void doKink(double *co, double oriCo[], double braid, double amp, double freq, double time, double k, double rot[]){
@@ -364,9 +388,14 @@ static PyObject * offset_child(PyObject *self, PyObject *args){
     // }
     double tmpCo[3];
     mul_v3_v3s1(tmpCo, rootDiff, radius);
-    srand(time(NULL));
+    
+    
     tmpCo[2] = roundness*((double)rand()/RAND_MAX*2-1);
-    mul_v3_qtv3_internal(tmpCo, tmpCo, rot);
+    // printf("before::::");
+    // for(int i=0;i<3;++i){
+    //    printf("%lf\n", tmpCo[i]);
+    // }
+    mul_v3_qtv3_internal_old(tmpCo, rot);
 
     if (braid > 0.0001){
       doKink(tmpCo, co, braid, amp, freq, k/step, k, rot);
@@ -431,6 +460,8 @@ PyMODINIT_FUNC PyInit_cpyutils(void) {
         Py_DECREF(m);
         return NULL;
     }
+    
+    srand(time(NULL));
 
     return m;
 }

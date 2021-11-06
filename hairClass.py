@@ -43,7 +43,7 @@ class HairCtrlSystem:
         if parent is not None:
             self.tarObj = obj
             self.parentNum = set(parent)
-            self.notParentNum = {i for i in range(const.DEFAULTHAIRNUM)} - self.parentNum
+            self.notParentNum = {i for i in range(bpy.context.scene.defaultHairNum)} - self.parentNum
             self.parentWeight = {key : 1 for key in parent}
             self.ctrlHair = []
             C = bpy.context
@@ -60,9 +60,9 @@ class HairCtrlSystem:
             psys.name = "AutoHairTarget"
             psys.settings.name = "AutoHairTargetParticleSettings"
             psys.settings.type = "HAIR"
-            psys.settings.count = const.DEFAULTHAIRNUM
+            psys.settings.count = bpy.context.scene.defaultHairNum
             psys.settings.hair_step = 99#49
-            psys.settings.display_step = 5
+            psys.settings.display_step = 6
             targetName = C.active_object.name
             hairCount = psys.settings.count
             psys.settings.hair_length = 0
@@ -208,6 +208,9 @@ class HairCtrlSystem:
                     # ch.keys[s-1].rot, prevTan = cpyutils.set_key_rotation(list(ps.hair_keys[s].co), list(ps.hair_keys[s-1].co), prevTan, ch.keys[s-2].rot)
                     ch.keys[s-1].rot, prevTan = cpyutils.set_key_rotation(list(ps.hair_keys[s].co), list(ps.hair_keys[s-1].co), list(prevTan), list(ch.keys[s-2].rot))
                 ch.keys[-1].rot = ch.keys[-2].rot #set last keys
+                # for i in ch.keys:
+                #     print(i.rot)
+                # print("--------")
         print("end setKeyRot in arrayedChild",datetime.datetime.now())
         hsysTar = bpy.context.scene.hsysTar
         hsysTar._particleEditMode()
@@ -295,25 +298,25 @@ class HairTarSystem:
         # print(p.ctrlNum, end='')
         for c in p.tarHair:
             parti = psys.particles[c.num]
-            if p.ctrlNum == c.num:
-                for k in range(1, self.hairStep):
-                    # pass
-                    parti.hair_keys[k].co = mathutils.Vector(p.keys[k].co)
-                    # parti.hair_keys[k].co = p.keys[k].co
-            else:
-                # print("ctrlNum!=c.num")
-                for k in range(1, self.hairStep):
-                    parti.hair_keys[k].co = mathutils.Vector(cpyutils.offset_child(list(c.rootDiff), \
-                                                                                    p.keys[k].radius, \
-                                                                                    list(p.keys[k].rot),\
-                                                                                    list(p.keys[k].co),\
-                                                                                    p.roundness,\
-                                                                                    k,\
-                                                                                    self.hairStep,\
-                                                                                    p.keys[k].random,\
-                                                                                    p.keys[k].braid,\
-                                                                                    p.keys[k].amp,\
-                                                                                    p.keys[k].freq))
+            # if p.ctrlNum == c.num: ### this was for reduction of calc cost, but it's not good when braid is not zero.
+            #     for k in range(1, self.hairStep):
+            #         # pass
+            #         parti.hair_keys[k].co = mathutils.Vector(p.keys[k].co)
+            #         # parti.hair_keys[k].co = p.keys[k].co
+            # else:
+            for k in range(1, self.hairStep):
+                parti.hair_keys[k].co = mathutils.Vector(cpyutils.offset_child(list(c.rootDiff), \
+                                                                                p.keys[k].radius, \
+                                                                                list(p.keys[k].rot),\
+                                                                                list(p.keys[k].co),\
+                                                                                p.roundness,\
+                                                                                k,\
+                                                                                self.hairStep,\
+                                                                                p.keys[k].random,\
+                                                                                p.keys[k].braid,\
+                                                                                p.keys[k].amp,\
+                                                                                p.keys[k].freq))
+                # print(p.keys[k].co - parti.hair_keys[k].co)
         
 ### inplemented in cpyutils
     # def _doKink(self, p, co, time, k):
